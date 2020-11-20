@@ -3,55 +3,76 @@
 #include "OalSound.hpp"
 #include "OalBuffer.hpp"
 
+#include <algorithm>
+
 std::unique_ptr<SoundEngine> SoundEngine::Create()
 {
     return std::unique_ptr<SoundEngine>(new OalSoundEngine());
 }
 
-OalSoundEngine::OalSoundEngine()
-    : m_device(nullptr)
-    , m_context(nullptr)
-    , m_initialized(false)
-    , m_maxMem(15.f)
-    , m_curMem (0.f)
+
+void OalSoundEngine::OalContextDeleter::operator()(ALCcontext* context)
 {
-    m_device = alcOpenDevice(NULL);
-    if (!m_device)
-        return;
-       
-    assert(alGetError() == AL_NO_ERROR);
-       
-    m_context = alcCreateContext(m_device, NULL);
-    if (!m_context)
+    alcMakeContextCurrent(NULL);
+    alcDestroyContext(context);
+}
+
+void OalSoundEngine::OalDeviceDeleter::operator()(ALCdevice* device)
+{
+    alcCloseDevice(device);
+}
+
+static bool CheckOpenAlError(ALCdevice* device)
+{
+    ALenum error = alcGetError(device);
+    if (error != ALC_NO_ERROR)
     {
-          alcCloseDevice(m_device);
-          return;
+        printf("\nALC Error %x occurred: %s\n", error, alcGetString(device, error));
+        
+        return true;
     }
     
-    assert(alGetError() == AL_NO_ERROR);
+    return false;;
+}
 
-    alcMakeContextCurrent(m_context);
-    m_initialized = true;
+OalSoundEngine::OalSoundEngine()
+    : m_maxMem(15.f)
+    , m_curMem (0.f)
+{
+    ALCdevice* device = alcOpenDevice(NULL);
+    if (!device)
+        return;
+    
+    m_device.reset(device);
+    assert(!CheckOpenAlError(m_device.get()));
+       
+    ALCcontext* context = alcCreateContext(device, NULL);
+    if (!context)
+    {
+        m_device.reset();
+        return;
+    }
+    
+    m_context.reset(context);
+    assert(!CheckOpenAlError(m_device.get()));
+
+    alcMakeContextCurrent(m_context.get());
 }
 
 OalSoundEngine::~OalSoundEngine()
 {
-    if (!m_initialized)
+    if (!m_device || !m_context)
         return;
     
-    for (auto& pathToSounds : m_sounds)
+    for (auto& bufferToSounds : m_sounds)
     {
-        for (auto sound : pathToSounds.second)
-        {
-            sound->Stop();
-        }
+        bufferToSounds.first->UnloadAllSources();
     }
-    
     m_sounds.clear();
-       
-    alcMakeContextCurrent(NULL);
-    alcDestroyContext(m_context);
-    alcCloseDevice(m_device);
+    m_buffers.clear();
+    
+    m_context.reset();
+    m_device.reset();
 }
 
 void OalSoundEngine::IncrementMemory(float sizeMem)
@@ -70,53 +91,32 @@ void OalSoundEngine::Update(float dt)
     auto it = m_sounds.begin();
     while (it != m_sounds.end())
     {
-        auto jt = it->second.begin();
-        while (jt != it->second.end())
+        SoundsList& list = it->second;
+        
+        for (std::size_t i = 0; i < list.size();)
         {
-            auto sound = *jt;
-            if (sound->m_isAutoDelete && sound->IsStopped())
-            {
-                jt = it->second.erase(jt);
-            }
-            else if (sound->m_sourceID != 0 && !sound->IsLoopped() && sound->IsStopped())
-            {
-                sound->m_buffer->RemoveSource(sound.get());
-                sound->m_sourceID = 0;
-                sound->m_currentTime = 0;
-                
-                ++jt;
-            }
-            else if (sound->m_isAutoDelete && sound->m_sourceID == 0 && !sound->IsLoopped())
-            {
-                // first = inside m_sounds map
-                // second - local variable inside while loop
-                static const size_t UNUSED_SOUND_COUNT = 2;
-                if (sound.use_count() == UNUSED_SOUND_COUNT)
-                    jt = it->second.erase(jt);
-            }
+            if (list[i]->m_isAutoDelete && !list[i]->IsPlaying() && list[i]->m_sourceID) // played once
+                list[i]->Delete();
             else
-            {
-                ++jt;
-            }
+                ++i;
         }
         
-        if (it->second.empty())
-            it = m_sounds.erase(it);
-        else
-            it++;
+        ++it;
     }
 }
 
 SoundHandle OalSoundEngine::PlaySound(const std::string& filePath, bool isAutoDelete)
 {
-    std::shared_ptr<OalSound> sound = CreateSound(filePath, isAutoDelete);
+    SoundPtr sound = CreateSound(filePath, isAutoDelete);
     sound->Play();
     return MakeHandle(sound);
 }
 
-SoundHandle OalSoundEngine::PlayOnce(const std::string& filePath)
+bool OalSoundEngine::PlayOnce(const std::string& filePath)
 {
-    return PlaySound(filePath, true);
+    SoundPtr sound = CreateSound(filePath, true);
+    sound->Play();
+    return sound->IsPlaying();
 }
 
 SoundHandle OalSoundEngine::GetSound(const std::string& filePath, bool isAutoDelete)
@@ -130,8 +130,10 @@ std::shared_ptr<OalSound> OalSoundEngine::CreateSound(const std::string& fileNam
     auto it = m_buffers.find(fileName);
     if (it != m_buffers.end())
     {
-        auto sound = std::make_shared<OalSound>(it->second, isAutoDelete);
-        AddSound(sound);
+        SoundPtr sound(new OalSound(it->second, isAutoDelete), [](OalSound* sound) { delete sound; });
+        sound->AttachBuffer();
+        
+        AddSound(it->second, sound);
         return sound;
     }
     else
@@ -139,38 +141,55 @@ std::shared_ptr<OalSound> OalSoundEngine::CreateSound(const std::string& fileNam
         auto buffer = std::make_shared<OalBuffer>(fileName, this);
         m_buffers[fileName] = buffer;
         
-        auto sound = std::make_shared<OalSound>(buffer, isAutoDelete);
-        AddSound(sound);
+        SoundPtr sound(new OalSound(buffer, isAutoDelete), [](OalSound* sound) { delete sound; });
+        sound->AttachBuffer();
+        
+        AddSound(buffer, sound);
         return sound;
     }
 }
 
-void OalSoundEngine::AddSound(std::shared_ptr<OalSound> sound)
+void OalSoundEngine::AddSound(std::shared_ptr<OalBuffer> buffer, std::shared_ptr<OalSound> sound)
 {
-    auto it = m_sounds.find(sound->GetFileName());
-    if (it != m_sounds.end())
+    auto jt = m_sounds.find(buffer);
+    if (jt != m_sounds.end())
     {
-        it->second.push_back(sound);
+        jt->second.push_back(sound);
     }
     else
     {
-        auto res = m_sounds.insert({sound->GetFileName(), SoundList()});
-        assert(res.second);
-        res.first->second.push_back(sound);
+        auto insertResultIt = m_sounds.emplace(buffer, SoundsList());
+        assert(insertResultIt.second);
+        insertResultIt.first->second.push_back(sound);
     }
 }
 
 bool OalSoundEngine::DeactivateBuffer(std::shared_ptr<OalBuffer> buffer)
 {
-    if (!buffer->CanBeErased())
-        return false;
-
-    buffer->UnloadMem();
     DecrementMemory(buffer->m_sizeMemory);
-    
     return true;
 }
-#include <algorithm>
+
+void OalSoundEngine::OnSourceCreated(BufferPtr buffer, SoundPtr sound)
+{
+    IncrementMemory(buffer->m_sizeMemory);
+    //TODO::
+}
+
+void OalSoundEngine::OnSourceRemoved(BufferPtr buffer, SoundPtr sound)
+{
+    assert(!m_sounds.empty());
+    
+    auto bufferIt = m_sounds.find(buffer);
+    assert(bufferIt != m_sounds.end());
+    
+    SoundsList& list = bufferIt->second;
+    
+    auto removedIt = std::remove_if(list.begin(), list.end(), [sound](SoundPtr ptr) { return sound == ptr; });
+    assert(removedIt != list.end());
+    assert(std::distance(removedIt, list.end()) == 1);
+    list.erase(removedIt, list.end());
+}
 
 bool OalSoundEngine::ActivateBuffer(std::shared_ptr<OalBuffer> buffer)
 {
@@ -180,9 +199,9 @@ bool OalSoundEngine::ActivateBuffer(std::shared_ptr<OalBuffer> buffer)
     if (!buffer->LoadMemory())
         return false;
     
-    if (buffer->SizeMem() >= GetMaxMem())
+    if (buffer->SizeMem() >= GetMaxMem()) // too big file
     {
-        buffer->UnloadMem();
+        buffer->UnloadAllSources();
         
 #ifndef NDEBUG
         assert(false);
@@ -190,26 +209,30 @@ bool OalSoundEngine::ActivateBuffer(std::shared_ptr<OalBuffer> buffer)
         return false;
     }
     
+    IncrementMemory(buffer->SizeMem());
+    
     if (GetCurMem() >= GetMaxMem())
     {
         for (auto it = m_buffers.begin(); it != m_buffers.end(); ++it)
         {
             auto buffer = it->second;
-            std::map<OalSound*, ALuint>& sources(buffer->m_mapSources);
+            auto& sources = buffer->m_sources;
             
-            bool allSourcesAreNotPlaying = std::all_of(sources.begin(), sources.end(), [](std::pair<OalSound*, ALuint> it) {
-                return !it.first->IsPlaying();
+            bool anyPlaying = std::any_of(sources.begin(), sources.end(), [](SoundPtr it)
+            {
+                return it->IsPlaying();
             });
             
-            if (!allSourcesAreNotPlaying)
+            if (anyPlaying || !buffer->CanBeErased())
                 continue;
             
-            buffer->UnloadMem();
-            
-            if (GetCurMem() < GetMaxMem())
-                break;
+            buffer->UnloadAllSources();
         }
-        
+    }
+    
+    
+    if (GetCurMem() >= GetMaxMem())
+    {
 #ifndef NDEBUG
         assert(false);
 #endif

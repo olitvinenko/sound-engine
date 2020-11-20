@@ -32,6 +32,8 @@ OalBuffer::OalBuffer(const std::string& fileName, OalSoundEngine* engine)
     : m_fileName(fileName)
     , m_soundEngine(engine)
 {
+    bool memoryLoaded = LoadMemory();
+    assert(memoryLoaded);
 }
 
 bool OalBuffer::LoadMemory()
@@ -60,13 +62,14 @@ bool OalBuffer::LoadMemory()
     
     m_duration = duration;
     m_sizeMemory = (float)size / (1024.0f * 1024.0f);
-    m_soundEngine->IncrementMemory(SizeMem());
     
     return true;
 }
 
 OalBuffer::~OalBuffer()
 {
+    UnloadAllSources();
+    
     if (m_bufferID && alIsBuffer(m_bufferID))
         alDeleteBuffers(1, &m_bufferID);
     
@@ -75,7 +78,7 @@ OalBuffer::~OalBuffer()
 
 bool OalBuffer::CanBeErased() const
 {
-    if (!m_mapSources.empty())
+    if (!m_sources.empty())
         return false;
     
     if (m_bufferID == 0) // already unloaded
@@ -84,107 +87,86 @@ bool OalBuffer::CanBeErased() const
     return true;
 }
 
-void OalBuffer::UnloadMem()
+void OalBuffer::UnloadAllSources()
 {
-    auto it = m_mapSources.begin();
-    for (; it != m_mapSources.end() ; it++)
+    auto it = m_sources.begin();
+    while (it != m_sources.end())
     {
-        it->first->UnloadBuffer();
-        ALuint sourceID = it->second;
-        alSourceStop(sourceID);
-        alSourcei(sourceID, AL_BUFFER, 0);
-        alDeleteSources(1, &sourceID);
+        (*it)->Delete();
+        it = m_sources.begin();
+    }
+  
+    assert(m_sources.empty());
 
-        m_sourcesCount--;
-    }
-    m_mapSources.clear();
-    
-    //now the buffer, since it wasn't copied to openAL
-    if (m_bufferID)
-    {
-        if (alIsBuffer(m_bufferID))
-            alDeleteBuffers(1, &m_bufferID);
-//        else
-//            ALOG("Error: alIsBuffer(m_bufferID)");
-        
-        //m_soundEngine->DecrementMemory(SizeMem());
-    }
-    
-    m_bufferID = 0;
+//    m_soundEngine->DeactivateBuffer(shared_from_this());
+//    m_bufferID = 0;
 }
-#define SOURCE_OAL 32 //макс допустимое количество источников
-ALuint OalBuffer::GetSource(OalSound* soundOAL)
+//#define SOURCE_OAL 32
+//
+//ALuint OalBuffer::GrabSource(std::shared_ptr<OalSound> soundOAL)
+//{
+//    ALuint sourceID(0);
+//
+//    auto it = m_sources.find(soundOAL);
+//    if (m_sources.end() != it)
+//    {
+//        return (*it)->GetSourceId();
+//    }
+//
+//    const static int MAX_SOURCE = 8;
+//    if (m_sources.size() >= MAX_SOURCE)// || CBufferOALManager::Get().GetCounterSource() >= SOURCE_OA)
+//    {
+//        std::cout << "m_CounterSource >= MAX_SOURCE" << std::endl;
+//        //("Error!! m_CounterSource = %i,     g_CounterSource= %i", m_CounterSource, CBufferOALManager::Get().GetCounterSource());
+//        return 0;
+//    }
+//
+//    m_soundEngine->ActivateBuffer(shared_from_this());
+//
+//    if (m_bufferID == 0)
+//        return 0;
+//
+//    ALenum error = AL_NO_ERROR;
+//    error = alGetError();
+//
+//    // grab a source ID from openAL, this will be the base source ID
+//    //alGenSources(1, &sourceID);
+//    error = alGetError();
+//    // attach the buffer to the source
+//    alSourcei(soundOAL->GetSourceId(), AL_BUFFER, m_bufferID);
+//    error = alGetError();
+//
+//    if ((error = alGetError()) != AL_NO_ERROR || sourceID == 0)
+//    {
+//        //ALOG("error: %i create sourceID: %i\n", error, sourceID);
+//        return 0;
+//    }
+//    else
+//    {
+//        auto insertResultIt = m_sources.insert(soundOAL);
+//        assert(insertResultIt.second);
+//    }
+    
+    //m_soundEngine->OnSourceCreated(shared_from_this(), soundOAL);
+//    return sourceID;
+//}
+
+void OalBuffer::AttachSource(SoundPtr sound)
 {
-    ALuint sourceID(0);
-
-    auto it = m_mapSources.find(soundOAL);
-    if (m_mapSources.end() != it)
-    {
-        return it->second;
-    }
+    alGetError(); //TODO::
+    alSourcei(sound->GetSourceId(), AL_BUFFER, m_bufferID);
+    alGetError(); //TODO::
     
-    const static int MAX_SOURCE = 8;
-    if (m_sourcesCount >= MAX_SOURCE)// || CBufferOALManager::Get().GetCounterSource() >= SOURCE_OA)
-    {
-        std::cout << "m_CounterSource >= MAX_SOURCE" << std::endl;
-        //ALOG("Error!! m_CounterSource = %i,     g_CounterSource= %i", m_CounterSource, CBufferOALManager::Get().GetCounterSource());
-        return 0;
-    }
-    
-    m_soundEngine->ActivateBuffer(shared_from_this());
-    
-    if (m_bufferID == 0)
-        return 0;
-    
-    ALenum error = AL_NO_ERROR;
-    error = alGetError();
-    
-    // grab a source ID from openAL, this will be the base source ID
-    alGenSources(1, &sourceID);
-    error = alGetError();
-    // attach the buffer to the source
-    alSourcei(sourceID, AL_BUFFER, m_bufferID);
-    error = alGetError();
-
-    if ((error = alGetError()) != AL_NO_ERROR || sourceID == 0)
-    {
-        //ALOG("error: %i create sourceID: %i\n", error, sourceID);
-        return 0;
-    }
-    else{
-        m_sourcesCount++;
-        m_mapSources[soundOAL] = sourceID;
-    }
-    
-    return sourceID;
-}
-
-bool OalBuffer::RemoveSource(OalSound* soundOAL)
-{
-    auto it = m_mapSources.find(soundOAL);
-    if (m_mapSources.end() == it)
-    {
-        return false;
-    }
-    
-    //delete base source...
-    ALenum error = AL_NO_ERROR;
-    alGetError();
-    ALuint sourceID = it->second;
-    alSourceStop(sourceID);
-    alSourcei(sourceID, AL_BUFFER, 0);
-    alDeleteSources(1, &sourceID);
-    if((error = alGetError()) != AL_NO_ERROR || sourceID==0)
-    {
-        //ALOG("error: %i Delete sourceID: %i\n", error, sourceID);
-    }
-    
-
-    m_sourcesCount--;
-    m_mapSources.erase(it);
-    
-    m_soundEngine->DeactivateBuffer(shared_from_this());
-    
-    return true;
+    m_sources.insert(sound);
+    m_soundEngine->OnSourceCreated(shared_from_this(), sound);
 }
 
+void OalBuffer::DetachSource(SoundPtr sound)
+{
+    alGetError(); //TODO::
+    alSourcei(sound->GetSourceId(), AL_BUFFER, 0);
+    alGetError(); //TODO::
+    
+    m_sources.erase(sound);
+    m_soundEngine->OnSourceRemoved(shared_from_this(), sound);
+}

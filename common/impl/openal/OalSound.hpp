@@ -7,14 +7,18 @@
 
 class OalBuffer;
 
-class OalSound : public Sound
+class OalSound
+    : public Sound
+    , public std::enable_shared_from_this<OalSound>
 {
     friend class OalSoundEngine;
-public:
+    
+private:
     OalSound(std::shared_ptr<OalBuffer> buffer, bool isAutoDelete);
     ~OalSound();
+public:
     
-protected:
+public:
     void Play() override;
     void Pause() override;
     void Stop() override;
@@ -34,9 +38,15 @@ protected:
     
     float GetDurationSec() const override { return m_duration; }
     
+    void Delete() override;
+    
 public:
     void UnloadBuffer();
     const std::string& GetFileName() const;
+    ALuint GetSourceId() const { return m_sourceID; }
+    
+    void AttachBuffer();
+    void DetachBuffer();
     
 private:
     bool Volume(float volume);

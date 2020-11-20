@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include <string>
-#include <map>
+#include <unordered_set>
 
 #include <OpenAL/OpenAL.h>
 
@@ -13,6 +13,7 @@ class OalBuffer : public std::enable_shared_from_this<OalBuffer>
 {
     friend class OalSoundEngine;
 
+    using SoundPtr = std::shared_ptr<OalSound>;
 public:
     OalBuffer(const std::string& fileName, OalSoundEngine* engine);
     ~OalBuffer();
@@ -22,16 +23,18 @@ public:
     
     bool LoadMemory();
     bool CanBeErased() const;
-    void UnloadMem();
+    void UnloadAllSources();
     
     float SizeMem() const { return m_sizeMemory; }
     
-    ALuint GetSource(OalSound* soundOAL);
-    bool RemoveSource(OalSound* soundOAL);
+    void AttachSource(SoundPtr sound);
+    void DetachSource(SoundPtr sound);
+    
+//    void CreateSource(OalSound* sound);
+//    void DeleteSource(OalSound* sound);
 
 private:
-    std::map<OalSound*, ALuint>  m_mapSources;
-    int m_sourcesCount = 0;
+    std::unordered_set<SoundPtr> m_sources;
     
     ALuint      m_bufferID = 0;
     ALdouble    m_duration = 0;

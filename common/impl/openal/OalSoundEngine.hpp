@@ -8,44 +8,62 @@
 #include <string>
 #include <memory>
 #include <list>
+#include <vector>
+#include <unordered_set>
 
 class OalBuffer;
 class OalSound;
 
-class OalSoundEngine :public SoundEngine
+class OalSoundEngine : public SoundEngine
 {
-protected:
+private:
+    struct OalContextDeleter
+    {
+        void operator()(ALCcontext* context);
+    };
+
+    struct OalDeviceDeleter
+    {
+        void operator()(ALCdevice* device);
+    };
+    
+    using SoundPtr = std::shared_ptr<OalSound>;
+    using BufferPtr = std::shared_ptr<OalBuffer>;
+
+    using SoundsList = std::vector<SoundPtr>;
 
 public:
     OalSoundEngine();
     ~OalSoundEngine();
     
     SoundHandle PlaySound(const std::string& filePath, bool isAutoDelete) override;
-    SoundHandle PlayOnce(const std::string& filePath) override;
     SoundHandle GetSound(const std::string& filePath, bool isAutoDelete) override;
+    bool PlayOnce(const std::string& filePath) override;
     void Update(float deltaTime) override;
     
     float GetMaxMem() const { return m_maxMem; };
     float GetCurMem() const { return m_curMem; };
     
-    bool ActivateBuffer(std::shared_ptr<OalBuffer> buffer);
-    bool DeactivateBuffer(std::shared_ptr<OalBuffer> buffer);
+    bool ActivateBuffer(BufferPtr buffer);
+    bool DeactivateBuffer(BufferPtr buffer);
+    
     void IncrementMemory(float sizeMem);
     void DecrementMemory(float sizeMem);
     
+    void OnSourceCreated(BufferPtr buffer, SoundPtr sound);
+    void OnSourceRemoved(BufferPtr buffer, SoundPtr sound);
+    
 private:
-    void AddSound(std::shared_ptr<OalSound> sound);
-    std::shared_ptr<OalSound> CreateSound(const std::string& fileName, bool isAutoDelete);
-    
-    std::unordered_map<std::string, std::shared_ptr<OalBuffer>> m_buffers;
-    
-    using SoundList = std::list<std::shared_ptr<OalSound>>;
-    std::unordered_map<std::string, SoundList> m_sounds;
-    
-    ALCdevice* m_device;
-    ALCcontext* m_context;
+    void AddSound(BufferPtr buffer, SoundPtr sound);
+    SoundPtr CreateSound(const std::string& fileName, bool isAutoDelete);
 
-    bool m_initialized;
+    std::unique_ptr<ALCdevice, OalDeviceDeleter> m_device;
+    std::unique_ptr<ALCcontext, OalContextDeleter> m_context;
+    
+    // loaded buffer => all created sources from it
+    std::unordered_map<BufferPtr, SoundsList> m_sounds;
+    // file path => loaded buffer
+    std::unordered_map<std::string, BufferPtr> m_buffers;
     
     float m_maxMem;
     float m_curMem;

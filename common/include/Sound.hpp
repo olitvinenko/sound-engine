@@ -2,6 +2,8 @@
 
 struct Sound
 {
+    friend class SoundHandle;
+    
     virtual void Play() = 0;
     virtual void Pause() = 0;
     virtual void Stop() = 0;
@@ -22,4 +24,11 @@ struct Sound
     virtual float GetDurationSec() const = 0;
     
     virtual ~Sound() = default;
+protected:
+    virtual void Delete() = 0;
+    
+//protected:
+//    virtual void OnLastHandleDestroyed() = 0;
+private:
+    unsigned int m_handlesCount { 0 };
 };
