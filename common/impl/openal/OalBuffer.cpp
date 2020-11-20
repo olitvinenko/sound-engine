@@ -97,10 +97,8 @@ void OalBuffer::UnloadAllSources()
     }
   
     assert(m_sources.empty());
-
-//    m_soundEngine->DeactivateBuffer(shared_from_this());
-//    m_bufferID = 0;
 }
+
 //#define SOURCE_OAL 32
 //
 //ALuint OalBuffer::GrabSource(std::shared_ptr<OalSound> soundOAL)
@@ -151,22 +149,22 @@ void OalBuffer::UnloadAllSources()
 //    return sourceID;
 //}
 
-void OalBuffer::AttachSource(SoundPtr sound)
+void OalBuffer::AttachSource(OalSound* sound)
 {
     alGetError(); //TODO::
     alSourcei(sound->GetSourceId(), AL_BUFFER, m_bufferID);
     alGetError(); //TODO::
     
     m_sources.insert(sound);
-    m_soundEngine->OnSourceCreated(shared_from_this(), sound);
+    m_soundEngine->OnSourceCreated(this, sound);
 }
 
-void OalBuffer::DetachSource(SoundPtr sound)
+void OalBuffer::DetachSource(OalSound* sound)
 {
     alGetError(); //TODO::
     alSourcei(sound->GetSourceId(), AL_BUFFER, 0);
     alGetError(); //TODO::
     
     m_sources.erase(sound);
-    m_soundEngine->OnSourceRemoved(shared_from_this(), sound);
+    m_soundEngine->OnSourceRemoved(this, sound);
 }

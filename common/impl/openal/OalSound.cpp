@@ -33,35 +33,29 @@ static void DeleteSourceId(ALuint sourceID)
     }
 }
 
-OalSound::OalSound(std::shared_ptr<OalBuffer> buffer, bool isAutoDelete)
+OalSound::OalSound(OalBuffer* buffer, bool isAutoDelete)
         : m_currentTime(0)
         , m_saveCurrentTime(0)
         , m_isLoop(false)
         , m_volume(100)
-        , m_duration(buffer->Duration())
+        , m_duration(0)
         , m_isAutoDelete(isAutoDelete)
         , m_sourceID(0)
         , m_buffer(buffer)
 {
+    m_duration = m_buffer->Duration();
     m_sourceID = GenerateSourceId();
+    
+    if (m_sourceID)
+        m_buffer->AttachSource(this);
 }
     
 OalSound::~OalSound()
 {
     if (m_sourceID)
         DeleteSourceId(m_sourceID);
+    
     m_sourceID = 0;
-}
-
-void OalSound::AttachBuffer()
-{
-    m_buffer->AttachSource(shared_from_this());
-}
-
-//TODO:: refactor
-void OalSound::DetachBuffer()
-{
-    m_buffer->DetachSource(shared_from_this());
 }
 
 void OalSound::Delete()
@@ -71,9 +65,9 @@ void OalSound::Delete()
     
     if (IsPlaying())
         Stop();
-
+    
     auto locked = shared_from_this();
-    m_buffer->DetachSource(locked);
+    m_buffer->DetachSource(this);
     
     //1. locked variable
     //2. locked in SoundHandle
@@ -83,18 +77,6 @@ void OalSound::Delete()
 const std::string& OalSound::GetFileName() const
 {
     return m_buffer->GetFileName();
-}
-
-void OalSound::UnloadBuffer()
-{
-    if (m_sourceID)
-    {
-        //alGetSourcei(m_sourceID, AL_SOURCE_STATE, &m_saveState);
-        //alGetSourcef(m_sourceID, AL_SEC_OFFSET, &m_saveCurrentTime);
-    }
-    m_sourceID = 0;
-    m_currentTime = 0;
-   // mIsUnloadBuffer = true;
 }
 
 void OalSound::Play()
@@ -144,6 +126,9 @@ void OalSound::Pause()
         return;
     
     m_saveCurrentTime = GetTime();
+    
+    //alGetSourcei(m_sourceID, AL_SOURCE_STATE, &m_saveState);
+    //alGetSourcef(m_sourceID, AL_SEC_OFFSET, &m_saveCurrentTime);
     
     alGetError();
     alSourcePause(m_sourceID);

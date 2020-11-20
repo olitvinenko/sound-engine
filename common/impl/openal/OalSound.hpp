@@ -14,7 +14,7 @@ class OalSound
     friend class OalSoundEngine;
     
 private:
-    OalSound(std::shared_ptr<OalBuffer> buffer, bool isAutoDelete);
+    OalSound(OalBuffer* buffer, bool isAutoDelete);
     ~OalSound();
 public:
     
@@ -41,12 +41,8 @@ public:
     void Delete() override;
     
 public:
-    void UnloadBuffer();
     const std::string& GetFileName() const;
     ALuint GetSourceId() const { return m_sourceID; }
-    
-    void AttachBuffer();
-    void DetachBuffer();
     
 private:
     bool Volume(float volume);
@@ -62,5 +58,5 @@ private:
     bool m_isAutoDelete;
     
     ALuint m_sourceID;
-    std::shared_ptr<OalBuffer> m_buffer;
+    OalBuffer* m_buffer;
 };

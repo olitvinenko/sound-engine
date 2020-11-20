@@ -64,12 +64,10 @@ OalSoundEngine::~OalSoundEngine()
     if (!m_device || !m_context)
         return;
     
-    for (auto& bufferToSounds : m_sounds)
-    {
-        bufferToSounds.first->UnloadAllSources();
-    }
-    m_sounds.clear();
     m_buffers.clear();
+    for (auto& filePathToSounds : m_sounds)
+        assert(filePathToSounds.second.empty());
+    m_sounds.clear();
     
     m_context.reset();
     m_device.reset();
@@ -130,9 +128,7 @@ std::shared_ptr<OalSound> OalSoundEngine::CreateSound(const std::string& fileNam
     auto it = m_buffers.find(fileName);
     if (it != m_buffers.end())
     {
-        SoundPtr sound(new OalSound(it->second, isAutoDelete), [](OalSound* sound) { delete sound; });
-        sound->AttachBuffer();
-        
+        SoundPtr sound(new OalSound(it->second.get(), isAutoDelete), [](OalSound* sound) { delete sound; });
         AddSound(it->second, sound);
         return sound;
     }
@@ -141,9 +137,7 @@ std::shared_ptr<OalSound> OalSoundEngine::CreateSound(const std::string& fileNam
         auto buffer = std::make_shared<OalBuffer>(fileName, this);
         m_buffers[fileName] = buffer;
         
-        SoundPtr sound(new OalSound(buffer, isAutoDelete), [](OalSound* sound) { delete sound; });
-        sound->AttachBuffer();
-        
+        SoundPtr sound(new OalSound(buffer.get(), isAutoDelete), [](OalSound* sound) { delete sound; });
         AddSound(buffer, sound);
         return sound;
     }
@@ -151,14 +145,14 @@ std::shared_ptr<OalSound> OalSoundEngine::CreateSound(const std::string& fileNam
 
 void OalSoundEngine::AddSound(std::shared_ptr<OalBuffer> buffer, std::shared_ptr<OalSound> sound)
 {
-    auto jt = m_sounds.find(buffer);
+    auto jt = m_sounds.find(buffer->GetFileName());
     if (jt != m_sounds.end())
     {
         jt->second.push_back(sound);
     }
     else
     {
-        auto insertResultIt = m_sounds.emplace(buffer, SoundsList());
+        auto insertResultIt = m_sounds.emplace(buffer->GetFileName(), SoundsList());
         assert(insertResultIt.second);
         insertResultIt.first->second.push_back(sound);
     }
@@ -170,22 +164,22 @@ bool OalSoundEngine::DeactivateBuffer(std::shared_ptr<OalBuffer> buffer)
     return true;
 }
 
-void OalSoundEngine::OnSourceCreated(BufferPtr buffer, SoundPtr sound)
+void OalSoundEngine::OnSourceCreated(OalBuffer* buffer, OalSound* sound)
 {
     IncrementMemory(buffer->m_sizeMemory);
     //TODO::
 }
 
-void OalSoundEngine::OnSourceRemoved(BufferPtr buffer, SoundPtr sound)
+void OalSoundEngine::OnSourceRemoved(OalBuffer* buffer, OalSound* sound)
 {
     assert(!m_sounds.empty());
     
-    auto bufferIt = m_sounds.find(buffer);
+    auto bufferIt = m_sounds.find(buffer->GetFileName());
     assert(bufferIt != m_sounds.end());
     
     SoundsList& list = bufferIt->second;
     
-    auto removedIt = std::remove_if(list.begin(), list.end(), [sound](SoundPtr ptr) { return sound == ptr; });
+    auto removedIt = std::remove_if(list.begin(), list.end(), [sound](SoundPtr ptr) { return sound == ptr.get(); });
     assert(removedIt != list.end());
     assert(std::distance(removedIt, list.end()) == 1);
     list.erase(removedIt, list.end());
@@ -218,7 +212,7 @@ bool OalSoundEngine::ActivateBuffer(std::shared_ptr<OalBuffer> buffer)
             auto buffer = it->second;
             auto& sources = buffer->m_sources;
             
-            bool anyPlaying = std::any_of(sources.begin(), sources.end(), [](SoundPtr it)
+            bool anyPlaying = std::any_of(sources.begin(), sources.end(), [](OalSound* it)
             {
                 return it->IsPlaying();
             });

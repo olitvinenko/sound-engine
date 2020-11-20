@@ -50,8 +50,8 @@ public:
     void IncrementMemory(float sizeMem);
     void DecrementMemory(float sizeMem);
     
-    void OnSourceCreated(BufferPtr buffer, SoundPtr sound);
-    void OnSourceRemoved(BufferPtr buffer, SoundPtr sound);
+    void OnSourceCreated(OalBuffer* buffer, OalSound* sound);
+    void OnSourceRemoved(OalBuffer* buffer, OalSound* sound);
     
 private:
     void AddSound(BufferPtr buffer, SoundPtr sound);
@@ -61,7 +61,7 @@ private:
     std::unique_ptr<ALCcontext, OalContextDeleter> m_context;
     
     // loaded buffer => all created sources from it
-    std::unordered_map<BufferPtr, SoundsList> m_sounds;
+    std::unordered_map<std::string, SoundsList> m_sounds;
     // file path => loaded buffer
     std::unordered_map<std::string, BufferPtr> m_buffers;
     

@@ -9,7 +9,7 @@
 class OalSound;
 class OalSoundEngine;
 
-class OalBuffer : public std::enable_shared_from_this<OalBuffer>
+class OalBuffer final
 {
     friend class OalSoundEngine;
 
@@ -23,18 +23,16 @@ public:
     
     bool LoadMemory();
     bool CanBeErased() const;
+    
     void UnloadAllSources();
     
     float SizeMem() const { return m_sizeMemory; }
     
-    void AttachSource(SoundPtr sound);
-    void DetachSource(SoundPtr sound);
-    
-//    void CreateSource(OalSound* sound);
-//    void DeleteSource(OalSound* sound);
+    void AttachSource(OalSound* sound);
+    void DetachSource(OalSound* sound);
 
 private:
-    std::unordered_set<SoundPtr> m_sources;
+    std::unordered_set<OalSound*> m_sources;
     
     ALuint      m_bufferID = 0;
     ALdouble    m_duration = 0;
