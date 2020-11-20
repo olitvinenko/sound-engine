@@ -23,12 +23,10 @@ struct Sound
     
     virtual float GetDurationSec() const = 0;
     
-    virtual ~Sound() = default;
 protected:
+    virtual ~Sound() = default;
     virtual void Delete() = 0;
     
-//protected:
-//    virtual void OnLastHandleDestroyed() = 0;
 private:
     unsigned int m_handlesCount { 0 };
 };
