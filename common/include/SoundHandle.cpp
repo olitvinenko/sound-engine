@@ -18,12 +18,6 @@ Sound* SoundHandle::operator ->()
     return ptr.get();
 }
 
-SoundHandle::SoundHandle(SoundHandle&& handle) noexcept //TODO:: check it
-    : m_sound(std::move(handle.m_sound)) //TODO:: check it
-{
-    //TODO:: check it
-}
-
 SoundHandle& SoundHandle::operator=(SoundHandle&& handle) noexcept
 {
     SoundPtr sound = *this;

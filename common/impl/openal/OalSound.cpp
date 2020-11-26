@@ -69,7 +69,7 @@ void OalSound::Delete()
     auto locked = shared_from_this();
     m_buffer->DetachSource(this);
     
-    //1. locked variable
+    //1. 'locked' variable
     //2. locked in SoundHandle
     assert(locked.use_count() <= 2);
 }
