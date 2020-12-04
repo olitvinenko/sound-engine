@@ -5,18 +5,18 @@
 
 #include "SoundHandle.hpp"
 
-struct SoundEngine
+struct ISoundEngine
 {
+    virtual ~ISoundEngine() = default;
+    
     virtual SoundHandle PlaySound(const std::string& filePath, bool isAutoDelete) = 0;
     virtual SoundHandle GetSound(const std::string& filePath, bool isAutoDelete) = 0;
     virtual bool PlayOnce(const std::string& filePath) = 0;
     
     virtual void Update(float deltaTime) = 0;
     
-    virtual ~SoundEngine() = default;
-    
-    static std::unique_ptr<SoundEngine> Create();
+    static std::unique_ptr<ISoundEngine> Create();
     
 protected:
-    SoundHandle MakeHandle(std::shared_ptr<Sound> sound) { return SoundHandle(sound); }
+    SoundHandle CreateHandle(std::shared_ptr<ISound> sound) { return SoundHandle(sound); }
 };

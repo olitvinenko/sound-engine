@@ -34,16 +34,9 @@ static void DeleteSourceId(ALuint sourceID)
 }
 
 OalSound::OalSound(OalBuffer* buffer, bool isAutoDelete)
-        : m_currentTime(0)
-        , m_saveCurrentTime(0)
-        , m_isLoop(false)
-        , m_volume(100)
-        , m_duration(0)
-        , m_isAutoDelete(isAutoDelete)
+        : Sound(buffer, isAutoDelete)
         , m_sourceID(0)
-        , m_buffer(buffer)
 {
-    m_duration = m_buffer->Duration();
     m_sourceID = GenerateSourceId();
     
     if (m_sourceID)
@@ -58,31 +51,10 @@ OalSound::~OalSound()
     m_sourceID = 0;
 }
 
-void OalSound::Delete()
-{
-    if (!m_sourceID)
-        return;
-    
-    if (IsPlaying())
-        Stop();
-    
-    auto locked = shared_from_this();
-    m_buffer->DetachSource(this);
-    
-    //1. 'locked' variable
-    //2. locked in SoundHandle
-    assert(locked.use_count() <= 2);
-}
-
-const std::string& OalSound::GetFileName() const
-{
-    return m_buffer->GetFileName();
-}
-
-void OalSound::Play()
+bool OalSound::Play()
 {
     if (IsPlaying())
-        return;
+        return false;
     
     SetLoop(m_isLoop);
     SetVolume(m_volume);
@@ -96,15 +68,19 @@ void OalSound::Play()
         if (alGetError() != AL_NO_ERROR)
         {
             //todo:: log
+            return false;
         }
+        
+        return true;
     }
-
+    
+    return false;
 }
 
-void OalSound::Stop()
+bool OalSound::Stop()
 {
-    if (!m_sourceID)
-        return;
+    if (!IsValid())
+        return false;
     
     assert(alIsSource(m_sourceID));
     
@@ -116,14 +92,16 @@ void OalSound::Stop()
     if(alGetError() != AL_NO_ERROR)
     {
         //("error pause file:%s\n", m_file.data());
-        return;
+        return false;
     }
+    
+    return true;
 }
 
-void OalSound::Pause()
+bool OalSound::Pause()
 {
-    if (!m_sourceID)
-        return;
+    if (!IsValid())
+        return false;
     
     m_saveCurrentTime = GetTime();
     
@@ -135,18 +113,23 @@ void OalSound::Pause()
     if(alGetError() != AL_NO_ERROR)
     {
         //("error pause file:%s\n", m_file.data());
-        return;
+        return false;
     }
+    
+    return true;
 }
 
-void OalSound::SetLoop(bool isLoop)
+bool OalSound::SetLoop(bool isLoop)
 {
     m_isLoop = isLoop;
     
     if (m_sourceID)
     {
         alSourcei(m_sourceID, AL_LOOPING, m_isLoop ? AL_TRUE : AL_FALSE);
+        return true;
     }
+    
+    return false;
 }
 
 bool OalSound::IsLoopped() const
@@ -159,10 +142,10 @@ bool OalSound::IsLoopped() const
    return state == AL_TRUE && m_isLoop;
 }
 
-void OalSound::SetTime(float timeSeconds)
+bool OalSound::SetTime(float timeSeconds)
 {
     if (!m_sourceID)
-        return;
+        return false;
     
     if (timeSeconds < 0)
         timeSeconds = 0;
@@ -174,8 +157,10 @@ void OalSound::SetTime(float timeSeconds)
     if(alGetError() != AL_NO_ERROR)
     {
         //("error SetCurrentTime file:%s\n", m_file.data());
-        return;
+        return false;
     }
+    
+    return true;
 }
 
 float OalSound::GetTime() const
@@ -218,10 +203,10 @@ bool OalSound::IsStopped() const
     return state == AL_STOPPED;
 }
 
-void OalSound::SetVolume(float volume)
+bool OalSound::SetVolume(float volume)
 {
     m_volume = std::max(std::min(volume, 1.0f), 0.0f);
-    Volume(m_volume);
+    return Volume(m_volume);
 }
 
 bool OalSound::Volume(float volume)

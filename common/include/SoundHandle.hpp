@@ -2,11 +2,11 @@
 
 #include <memory>
 
-struct Sound;
+struct ISound;
 
 class SoundHandle
 {
-    friend struct SoundEngine;
+    friend struct ISoundEngine;
     
 public:
     SoundHandle(const SoundHandle& handle);
@@ -17,14 +17,14 @@ public:
     
     ~SoundHandle();
     
-    Sound* operator ->();
+    ISound* operator ->();
     operator bool() const { return !m_sound.expired(); };
     
 private:
-    operator std::shared_ptr<Sound>() const { return m_sound.lock(); };
+    operator std::shared_ptr<ISound>() const { return m_sound.lock(); };
     
-    SoundHandle(std::weak_ptr<Sound> sound);
+    SoundHandle(std::weak_ptr<ISound> sound);
 
 private:
-    std::weak_ptr<Sound> m_sound;
+    std::weak_ptr<ISound> m_sound;
 };

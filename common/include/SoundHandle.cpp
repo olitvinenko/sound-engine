@@ -1,26 +1,26 @@
 #include "SoundHandle.hpp"
-#include "Sound.hpp"
+#include "ISound.hpp"
 
-using SoundPtr = std::shared_ptr<Sound>;
+using sound_ptr = std::shared_ptr<ISound>;
 
-SoundHandle::SoundHandle(std::weak_ptr<Sound> sound)
+SoundHandle::SoundHandle(std::weak_ptr<ISound> sound)
    : m_sound(sound)
 {
-    SoundPtr ptr = *this;
+    sound_ptr ptr = *this;
     if (ptr)
         ptr->m_handlesCount++;
 }
 
-Sound* SoundHandle::operator ->()
+ISound* SoundHandle::operator ->()
 {
-    SoundPtr ptr = *this;
+    sound_ptr ptr = *this;
     assert(ptr);
     return ptr.get();
 }
 
 SoundHandle& SoundHandle::operator=(SoundHandle&& handle) noexcept
 {
-    SoundPtr sound = *this;
+    sound_ptr sound = *this;
     
     if (sound)
     {
@@ -36,7 +36,7 @@ SoundHandle& SoundHandle::operator=(SoundHandle&& handle) noexcept
 SoundHandle::SoundHandle(const SoundHandle& handle)
     : m_sound(handle.m_sound)
 {
-    SoundPtr ptr = *this;
+    sound_ptr ptr = *this;
     if (ptr)
         ptr->m_handlesCount++;
 }
@@ -46,8 +46,8 @@ SoundHandle& SoundHandle::operator=(const SoundHandle& handle)
     if (this == &handle)
         return *this;
     
-    SoundPtr thisPtr = *this;
-    SoundPtr otherPtr = handle.operator SoundPtr ();
+    sound_ptr thisPtr = *this;
+    sound_ptr otherPtr = handle.operator sound_ptr ();
     
     if (thisPtr == otherPtr)
         return *this;
@@ -70,7 +70,7 @@ SoundHandle& SoundHandle::operator=(const SoundHandle& handle)
 
 SoundHandle::~SoundHandle()
 {
-    SoundPtr sound = *this;
+    sound_ptr sound = *this;
     if (!sound)
         return;
     

@@ -5,8 +5,6 @@
 
 #include "../../decoders/AudioDecoder.hpp"
 
-#include <fstream>
-#include <iostream>
 
 static ALint GetFormatSound(ALint channels, ALint bitsPerSample)
 {
@@ -29,16 +27,15 @@ static ALint GetFormatSound(ALint channels, ALint bitsPerSample)
 }
 
 OalBuffer::OalBuffer(const std::string& fileName, OalSoundEngine* engine)
-    : m_fileName(fileName)
-    , m_soundEngine(engine)
+    : SoundBuffer(fileName, engine)
 {
-    bool memoryLoaded = LoadMemory();
-    assert(memoryLoaded);
+    bool isLoaded = LoadBuffer();
+    assert(isLoaded);
 }
 
-bool OalBuffer::LoadMemory()
+bool OalBuffer::LoadBuffer()
 {
-    auto decoder = AudioDecoder::GetDecoderFor(m_fileName);
+    auto decoder = AudioDecoder::GetDecoderFor(GetFileName());
     if(!decoder || !decoder->decode())
         return false;
     
@@ -74,29 +71,6 @@ OalBuffer::~OalBuffer()
         alDeleteBuffers(1, &m_bufferID);
     
     m_bufferID = 0;
-}
-
-bool OalBuffer::CanBeErased() const
-{
-    if (!m_sources.empty())
-        return false;
-    
-    if (m_bufferID == 0) // already unloaded
-        return false;
-    
-    return true;
-}
-
-void OalBuffer::UnloadAllSources()
-{
-    auto it = m_sources.begin();
-    while (it != m_sources.end())
-    {
-        (*it)->Delete();
-        it = m_sources.begin();
-    }
-  
-    assert(m_sources.empty());
 }
 
 //#define SOURCE_OAL 32
@@ -149,22 +123,20 @@ void OalBuffer::UnloadAllSources()
 //    return sourceID;
 //}
 
-void OalBuffer::AttachSource(OalSound* sound)
+void OalBuffer::AttachSource(Sound* sound)
 {
     alGetError(); //TODO::
-    alSourcei(sound->GetSourceId(), AL_BUFFER, m_bufferID);
+    alSourcei(((OalSound*)sound)->GetSourceId(), AL_BUFFER, m_bufferID); // TODO:: get rid off casting
     alGetError(); //TODO::
     
-    m_sources.insert(sound);
-    m_soundEngine->OnSourceCreated(this, sound);
+    SoundBuffer::AttachSource(sound);
 }
 
-void OalBuffer::DetachSource(OalSound* sound)
+void OalBuffer::DetachSource(Sound* sound)
 {
     alGetError(); //TODO::
-    alSourcei(sound->GetSourceId(), AL_BUFFER, 0);
+    alSourcei(((OalSound*)sound)->GetSourceId(), AL_BUFFER, 0); // TODO:: get rid off casting
     alGetError(); //TODO::
     
-    m_sources.erase(sound);
-    m_soundEngine->OnSourceRemoved(this, sound);
+    SoundBuffer::DetachSource(sound);
 }
