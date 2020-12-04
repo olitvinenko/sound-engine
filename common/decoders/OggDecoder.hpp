@@ -2,10 +2,11 @@
 
 #include "AudioDecoder.hpp"
 
-class OggDecoder: public AudioDecoder
+class OggDecoder final : public AudioDecoder
 {
 public:
     OggDecoder(const std::string& fileName);
+protected:
     bool decode() override;
 };
 

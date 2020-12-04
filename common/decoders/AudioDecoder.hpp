@@ -9,10 +9,11 @@
 
 class AudioDecoder
 {
+protected:
+    AudioDecoder(const std::string& fileName);
 public:
     static std::unique_ptr<AudioDecoder> GetDecoderFor(const std::string& fileName);
     
-    AudioDecoder(const std::string& fileName);
     virtual ~AudioDecoder();
     virtual bool decode() = 0;
     

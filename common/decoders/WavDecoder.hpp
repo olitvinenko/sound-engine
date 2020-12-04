@@ -2,10 +2,12 @@
 
 #include "AudioDecoder.hpp"
 
-class WavDecoder: public AudioDecoder
+class WavDecoder final : public AudioDecoder
 {
 public:
     WavDecoder(const std::string& fileName);
+
+protected:
     bool decode() override;
     
 protected:
