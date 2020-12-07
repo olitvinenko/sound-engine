@@ -12,6 +12,7 @@ Sound::Sound(SoundBuffer* buffer, bool isAutoDelete)
         , m_buffer(buffer)
 {
     m_duration = m_buffer->Duration();
+    m_buffer->AttachSource(this);
 }
 
 Sound::~Sound()

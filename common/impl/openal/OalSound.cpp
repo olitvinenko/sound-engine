@@ -38,9 +38,6 @@ OalSound::OalSound(OalBuffer* buffer, bool isAutoDelete)
         , m_sourceID(0)
 {
     m_sourceID = GenerateSourceId();
-    
-    if (m_sourceID)
-        m_buffer->AttachSource(this);
 }
     
 OalSound::~OalSound()
