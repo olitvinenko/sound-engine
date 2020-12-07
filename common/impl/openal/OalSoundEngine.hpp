@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef OPENAL_SOUND
+
 #include "../SoundEngine.hpp"
 
 #include <OpenAL/OpenAL.h>
@@ -30,3 +32,5 @@ private:
     std::unique_ptr<ALCdevice, OalDeviceDeleter> m_device;
     std::unique_ptr<ALCcontext, OalContextDeleter> m_context;
 };
+
+#endif

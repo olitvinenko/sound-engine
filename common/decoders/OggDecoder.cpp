@@ -5,6 +5,7 @@
 
 #include <exception>
 #include <climits>
+#include <stdexcept>
 
 OggDecoder::OggDecoder(const std::string& fileName)
     :AudioDecoder(fileName)

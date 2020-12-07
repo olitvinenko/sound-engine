@@ -2,6 +2,8 @@
 #include <iostream>
 #include "common/decoders/AudioDecoder.hpp"
 
+#ifdef OPENAL_SOUND
+
 #include <OpenAL/OpenAL.h>
 
 void printInfo(const AudioDecoder* decoder)
@@ -32,6 +34,8 @@ void testFile(const char* filePath)
     
     printInfo(decoder.get());
 }
+
+#endif
 
 #include "common/include/ISoundEngine.hpp"
 #include "common/include/SoundHandle.hpp"

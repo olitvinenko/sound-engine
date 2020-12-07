@@ -1,3 +1,5 @@
+#ifdef OPENAL_SOUND
+
 #include "OalSound.hpp"
 #include "OalBuffer.hpp"
 
@@ -223,3 +225,6 @@ bool OalSound::Volume(float volume)
     }
     return false;
 }
+
+
+#endif

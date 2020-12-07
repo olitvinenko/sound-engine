@@ -1,6 +1,7 @@
 #include "Sound.hpp"
 
 #include "SoundBuffer.hpp"
+#include <cassert>
 
 Sound::Sound(SoundBuffer* buffer, bool isAutoDelete)
         : m_currentTime(0)

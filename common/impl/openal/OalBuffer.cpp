@@ -1,3 +1,5 @@
+#ifdef OPENAL_SOUND
+
 #include "OalBuffer.hpp"
 
 #include "OalSound.hpp"
@@ -152,3 +154,5 @@ void OalBuffer::DetachSource(Sound* sound)
     
     SoundBuffer::DetachSource(sound);
 }
+
+#endif

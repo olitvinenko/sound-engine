@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "../cutils/bitops.h"  /* for popcount() */
+#include "../cutils/bitops_c.h"  /* for popcount() */
 #include "include/audio_utils/primitives.h"
 #include "private/private.h"
 
@@ -508,8 +508,8 @@ size_t memcpy_by_index_array_initialization_src_index(int8_t *idxary, size_t idx
 size_t memcpy_by_index_array_initialization_dst_index(int8_t *idxary, size_t idxcount,
         uint32_t dst_mask, uint32_t src_mask) {
     size_t src_idx, dst_idx;
-    size_t dst_count = __builtin_popcount(dst_mask);
-    size_t src_count = __builtin_popcount(src_mask);
+    size_t dst_count = popcount(dst_mask);
+    size_t src_count = popcount(src_mask);
     if (idxcount == 0) {
         return dst_count;
     }

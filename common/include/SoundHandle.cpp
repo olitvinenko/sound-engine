@@ -1,5 +1,6 @@
 #include "SoundHandle.hpp"
 #include "ISound.hpp"
+#include <cassert>
 
 using sound_ptr = std::shared_ptr<ISound>;
 

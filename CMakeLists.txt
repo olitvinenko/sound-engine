@@ -40,7 +40,8 @@ endforeach()
 add_library(sound_engine ${SRC_ALL})
 
 if(WIN32)
-	message ("audio lib is not implemented")
+	#message ("audio lib is not implemented")
+	add_definitions(-DX2AUDIO_SOUND)
 elseif(UNIX)
 
 	find_package(OpenAL REQUIRED)
@@ -51,10 +52,11 @@ elseif(UNIX)
 		target_link_libraries(sound_engine
 			${OPENAL_LIBRARY}
 		)
+		
+		add_definitions(-DOPENAL_SOUND)
 	else()
 		message("can't find OpenAL library")
 	endif()
-
 	
 endif()
 

@@ -3,8 +3,7 @@
 #include "Sound.hpp"
 #include "SoundEngine.hpp"
 
-#include <fstream>
-#include <iostream>
+#include <cassert>
 
 SoundBuffer::SoundBuffer(const std::string& fileName, SoundEngine* engine)
     : m_fileName(fileName)

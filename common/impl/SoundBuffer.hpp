@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <unordered_set>
+#include <memory>
 
 class Sound;
 class SoundEngine;

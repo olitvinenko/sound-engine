@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef OPENAL_SOUND
+
 #include <OpenAL/OpenAL.h>
 
 #include "../SoundBuffer.hpp"
@@ -24,3 +26,5 @@ private:
 private:
     ALuint m_bufferID = 0;
 };
+
+#endif

@@ -32,6 +32,10 @@
 #if defined(__APPLE__)
 /** Mac OS has always had a 64-bit off_t, so it doesn't have off64_t. */
 typedef off_t off64_t;
+#elif defined(WIN32)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+typedef int64_t off64_t;
 #endif
 
 typedef struct {
@@ -61,7 +65,6 @@ private:
 };
 
 int decodeMP3(mp3_callbacks* cb, void* source, std::vector<char>& pcmBuffer, int* numChannels, int* sampleRate, int* numFrames);
-
 
 #endif /* MP3READER_H_ */
 

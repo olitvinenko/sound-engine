@@ -4,6 +4,8 @@
 #include "Sound.hpp"
 #include "SoundBuffer.hpp"
 #include "../include/SoundHandle.hpp"
+#include <algorithm>
+#include <cassert>
 
 
 SoundEngine::SoundEngine()

@@ -27,9 +27,19 @@ extern "C" {
  */
 
 /* struct representation of 3 bytes for packed PCM 24 bit data.
- * The naming follows the ARM NEON convention.
- */
-typedef struct {uint8_t c[3];} __attribute__((__packed__)) uint8x3_t;
+* The naming follows the ARM NEON convention.
+*/
+#if defined(WIN32)
+#define PACKED
+#pragma pack(push,1)
+    typedef struct { uint8_t c[3]; } PACKED uint8x3_t;
+#pragma pack(pop)
+#undef PACKED
+#elif defined(__APPLE__)
+#define PACKED __attribute__ ((__packed__))
+    typedef struct { uint8_t c[3]; } PACKED uint8x3_t;
+#undef PACKED
+#endif
 
 #if defined(__cplusplus)
 }

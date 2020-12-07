@@ -1,3 +1,5 @@
+#ifdef OPENAL_SOUND
+
 #include "OalSoundEngine.hpp"
 
 #include "OalSound.hpp"
@@ -78,3 +80,5 @@ std::shared_ptr<SoundBuffer> OalSoundEngine::CreateBuffer(const std::string& fil
 {
     return std::make_shared<OalBuffer>(file, this);
 }
+
+#endif

@@ -28,7 +28,8 @@ THE SOFTWARE.
 // ----------------------------------------------------------------------------
 
 #include <stdint.h>
-#include "cutils/bitops.h"
+#include "cutils/bitops_c.h"
+#include <stdbool.h>
 
 #define PROPERTY_VALUE_MAX 256
 #define CONSTEXPR constexpr

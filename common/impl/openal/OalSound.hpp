@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef OPENAL_SOUND
+
 #include "../Sound.hpp"
 
 #include <OpenAL/OpenAL.h>
@@ -44,3 +46,5 @@ private:
 private:
     ALuint m_sourceID;
 };
+
+#endif
