@@ -19,6 +19,7 @@
 #include "include/audio_utils/primitives.h"
 #include "include/audio_utils/format.h"
 #include "../audio.h"
+#include <string.h>
 
 void memcpy_by_audio_format(void *dst, audio_format_t dst_format,
         const void *src, audio_format_t src_format, size_t count)
