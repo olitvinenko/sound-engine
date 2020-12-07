@@ -17,6 +17,7 @@
 #include "../cutils/bitops_c.h"  /* for popcount() */
 #include "include/audio_utils/primitives.h"
 #include "private/private.h"
+#include <string.h>
 
 void ditherAndClamp(int32_t* out, const int32_t *sums, size_t c)
 {
