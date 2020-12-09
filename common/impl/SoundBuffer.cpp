@@ -76,7 +76,7 @@ void SoundBuffer::UnloadAllSources()
 //
 //    if ((error = alGetError()) != AL_NO_ERROR || sourceID == 0)
 //    {
-//        //ALOG("error: %i create sourceID: %i\n", error, sourceID);
+//        //("error: %i create sourceID: %i\n", error, sourceID);
 //        return 0;
 //    }
 //    else

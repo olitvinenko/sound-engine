@@ -2,37 +2,22 @@
 
 #include "OalSound.hpp"
 #include "OalBuffer.hpp"
+#include "OalUtils.hpp"
 
 static ALuint GenerateSourceId()
 {
-    ALenum error = AL_NO_ERROR;
-    error = alGetError();
-    
     ALuint sourceID;
-    // grab a source ID from openAL, this will be the base source ID
-    alGenSources(1, &sourceID);
-    error = alGetError();
-
-    if ((error = alGetError()) != AL_NO_ERROR || sourceID == 0)
-    {
-        //("error: %i create sourceID: %i\n", error, sourceID);
-        return 0;
-    }
     
-    return sourceID;
+    if (alCall(alGenSources, 1, &sourceID))
+        return sourceID;
+    
+    return 0;
 }
 
 static void DeleteSourceId(ALuint sourceID)
 {
-    ALenum error = alGetError();
-
-    alSourceStop(sourceID);
-    alDeleteSources(1, &sourceID);
-    
-    if((error = alGetError()) != AL_NO_ERROR || sourceID==0)
-    {
-        //("error: %i Delete sourceID: %i\n", error, sourceID);
-    }
+    alCall(alSourceStop, sourceID);
+    alCall(alDeleteSources, 1, &sourceID);
 }
 
 OalSound::OalSound(OalBuffer* buffer, bool isAutoDelete)
@@ -60,16 +45,8 @@ bool OalSound::Play()
 
     //TODO:: check saved time for stopped/paused states
 
-    if (m_sourceID)
+    if (m_sourceID && alCall(alSourcePlay, m_sourceID))
     {
-        alGetError();
-        alSourcePlay(m_sourceID);
-        if (alGetError() != AL_NO_ERROR)
-        {
-            //todo:: log
-            return false;
-        }
-        
         return true;
     }
     
@@ -81,20 +58,12 @@ bool OalSound::Stop()
     if (!IsValid())
         return false;
     
-    assert(alIsSource(m_sourceID));
+    assert(alCall(alIsSource, m_sourceID).value);
     
     m_saveCurrentTime = 0;
     m_currentTime = 0;
     
-    alGetError();
-    alSourceStop(m_sourceID);
-    if(alGetError() != AL_NO_ERROR)
-    {
-        //("error pause file:%s\n", m_file.data());
-        return false;
-    }
-    
-    return true;
+    return alCall(alSourceStop, m_sourceID);
 }
 
 bool OalSound::Pause()
@@ -107,25 +76,16 @@ bool OalSound::Pause()
     //alGetSourcei(m_sourceID, AL_SOURCE_STATE, &m_saveState);
     //alGetSourcef(m_sourceID, AL_SEC_OFFSET, &m_saveCurrentTime);
     
-    alGetError();
-    alSourcePause(m_sourceID);
-    if(alGetError() != AL_NO_ERROR)
-    {
-        //("error pause file:%s\n", m_file.data());
-        return false;
-    }
-    
-    return true;
+    return alCall(alSourcePause, m_sourceID);
 }
 
 bool OalSound::SetLoop(bool isLoop)
 {
     m_isLoop = isLoop;
     
-    if (m_sourceID)
+    if (IsValid())
     {
-        alSourcei(m_sourceID, AL_LOOPING, m_isLoop ? AL_TRUE : AL_FALSE);
-        return true;
+        return alCall(alSourcei, m_sourceID, AL_LOOPING, m_isLoop ? AL_TRUE : AL_FALSE);
     }
     
     return false;
@@ -136,9 +96,9 @@ bool OalSound::IsLoopped() const
     if (!m_sourceID)
         return false;
     
-   ALint state(-1);
-   alGetSourcei(m_sourceID, AL_LOOPING, &state);
-   return state == AL_TRUE && m_isLoop;
+    ALint state(-1);
+    alCall(alGetSourcei, m_sourceID, AL_LOOPING, &state);
+    return state == AL_TRUE && m_isLoop;
 }
 
 bool OalSound::SetTime(float timeSeconds)
@@ -151,15 +111,7 @@ bool OalSound::SetTime(float timeSeconds)
     else if (timeSeconds > m_duration)
         timeSeconds = m_duration;
     
-    alGetError();
-    alSourcef(m_sourceID, AL_SEC_OFFSET, timeSeconds);
-    if(alGetError() != AL_NO_ERROR)
-    {
-        //("error SetCurrentTime file:%s\n", m_file.data());
-        return false;
-    }
-    
-    return true;
+    return alCall(alSourcef, m_sourceID, AL_SEC_OFFSET, timeSeconds);
 }
 
 float OalSound::GetTime() const
@@ -168,7 +120,7 @@ float OalSound::GetTime() const
         return 0.0f;
     
     ALfloat time;
-    alGetSourcef(m_sourceID, AL_SEC_OFFSET, &time);
+    alCall(alGetSourcef, m_sourceID, AL_SEC_OFFSET, &time);
     return time;
 }
 
@@ -178,7 +130,7 @@ bool OalSound::IsPlaying() const
         return false;
     
     ALenum state(-1);
-    alGetSourcei(m_sourceID, AL_SOURCE_STATE, &state);
+    alCall(alGetSourcei, m_sourceID, AL_SOURCE_STATE, &state);
     return state == AL_PLAYING;
 }
 
@@ -188,7 +140,7 @@ bool OalSound::IsPaused() const
         return false;
     
     ALenum state(-1);
-    alGetSourcei(m_sourceID, AL_SOURCE_STATE, &state);
+    alCall(alGetSourcei, m_sourceID, AL_SOURCE_STATE, &state);
     return state == AL_PAUSED;
 }
 
@@ -198,7 +150,7 @@ bool OalSound::IsStopped() const
         return false;
     
     ALenum state(-1);
-    alGetSourcei(m_sourceID, AL_SOURCE_STATE, &state);
+    alCall(alGetSourcei, m_sourceID, AL_SOURCE_STATE, &state);
     return state == AL_STOPPED;
 }
 
@@ -210,21 +162,12 @@ bool OalSound::SetVolume(float volume)
 
 bool OalSound::Volume(float volume)
 {
-    if (m_sourceID)
+    if (IsValid())
     {
         ALfloat vol = std::max(std::min(volume, 1.0f), 0.0f);
-        
-        alGetError();
-        alSourcef(m_sourceID, AL_GAIN, vol);
-        if(alGetError() != AL_NO_ERROR)
-        {
-            //("error SetVolume file:%s\n", m_file.data());
-            return false;
-        }
-        return true;
+        return alCall(alSourcef, m_sourceID, AL_GAIN, vol);
     }
     return false;
 }
-
 
 #endif

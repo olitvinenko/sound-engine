@@ -5,6 +5,8 @@
 #include "OalSound.hpp"
 #include "OalBuffer.hpp"
 
+#include "OalUtils.hpp"
+
 #include <algorithm>
 
 std::unique_ptr<ISoundEngine> ISoundEngine::Create()
@@ -15,39 +17,25 @@ std::unique_ptr<ISoundEngine> ISoundEngine::Create()
 
 void OalSoundEngine::OalContextDeleter::operator()(ALCcontext* context)
 {
-    alcMakeContextCurrent(NULL);
-    alcDestroyContext(context);
+    alCall(alcMakeContextCurrent, (ALCcontext*)NULL);
+    alCall(alcDestroyContext, context);
 }
 
 void OalSoundEngine::OalDeviceDeleter::operator()(ALCdevice* device)
 {
-    alcCloseDevice(device);
-}
-
-static bool CheckOpenAlError(ALCdevice* device)
-{
-    ALenum error = alcGetError(device);
-    if (error != ALC_NO_ERROR)
-    {
-        printf("\nALC Error %x occurred: %s\n", error, alcGetString(device, error));
-        
-        return true;
-    }
-    
-    return false;;
+    alCall(alcCloseDevice, device);
 }
 
 OalSoundEngine::OalSoundEngine()
     : SoundEngine()
 {
-    ALCdevice* device = alcOpenDevice(NULL);
+    ALCdevice* device = alCall(alcOpenDevice, (const ALCchar *)NULL);
     if (!device)
         return;
     
     m_device.reset(device);
-    assert(!CheckOpenAlError(m_device.get()));
-       
-    ALCcontext* context = alcCreateContext(device, NULL);
+
+    ALCcontext* context = alCall(alcCreateContext, device, (const ALCint*)NULL);
     if (!context)
     {
         m_device.reset();
@@ -55,9 +43,7 @@ OalSoundEngine::OalSoundEngine()
     }
     
     m_context.reset(context);
-    assert(!CheckOpenAlError(m_device.get()));
-
-    alcMakeContextCurrent(m_context.get());
+    alCall(alcMakeContextCurrent, m_context.get());
 }
 
 OalSoundEngine::~OalSoundEngine()

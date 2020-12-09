@@ -5,6 +5,8 @@
 #include "OalSound.hpp"
 #include "OalSoundEngine.hpp"
 
+#include "OalUtils.hpp"
+
 #include "../../decoders/AudioDecoder.hpp"
 
 
@@ -47,13 +49,12 @@ bool OalBuffer::LoadBuffer()
     ALsizei freq = decoder->GetSampleRate();
     int duration = decoder->GetDuration();
     
-    alGenBuffers(1, &m_bufferID);
-    alBufferData(m_bufferID, format, bufferData, size, freq);
-    
-    if (alGetError() != AL_NO_ERROR)
+
+    alCall(alGenBuffers, 1, &m_bufferID);
+    if (!alCall(alBufferData, m_bufferID, format, bufferData, size, freq))
     {
-        if (m_bufferID && alIsBuffer(m_bufferID))
-            alDeleteBuffers(1, &m_bufferID);
+        if (m_bufferID && alCall(alIsBuffer, m_bufferID).value)
+            alCall(alDeleteBuffers, 1, &m_bufferID);
         
         m_bufferID = 0;
         return false;
@@ -69,8 +70,8 @@ OalBuffer::~OalBuffer()
 {
     UnloadAllSources();
     
-    if (m_bufferID && alIsBuffer(m_bufferID))
-        alDeleteBuffers(1, &m_bufferID);
+    if (m_bufferID && alCall(alIsBuffer, m_bufferID).value)
+        alCall(alDeleteBuffers, 1, &m_bufferID);
     
     m_bufferID = 0;
 }
@@ -112,7 +113,7 @@ OalBuffer::~OalBuffer()
 //
 //    if ((error = alGetError()) != AL_NO_ERROR || sourceID == 0)
 //    {
-//        //ALOG("error: %i create sourceID: %i\n", error, sourceID);
+//        //("error: %i create sourceID: %i\n", error, sourceID);
 //        return 0;
 //    }
 //    else
@@ -132,9 +133,7 @@ void OalBuffer::AttachSource(Sound* sound)
 
     if (sourceId) //
     {
-        alGetError(); //TODO::
-        alSourcei(sourceId, AL_BUFFER, m_bufferID); //
-        alGetError(); //TODO::
+        alCall(alSourcei, sourceId, AL_BUFFER, m_bufferID);
     }
     
     SoundBuffer::AttachSource(sound);
@@ -147,9 +146,7 @@ void OalBuffer::DetachSource(Sound* sound)
     
     if (sourceId)
     {
-        alGetError(); //TODO::
-        alSourcei(sourceId, AL_BUFFER, 0);
-        alGetError(); //TODO::
+        alCall(alSourcei, sourceId, AL_BUFFER, 0);
     }
     
     SoundBuffer::DetachSource(sound);
