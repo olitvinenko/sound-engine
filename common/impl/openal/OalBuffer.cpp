@@ -128,10 +128,10 @@ OalBuffer::~OalBuffer()
 
 void OalBuffer::AttachSource(Sound* sound)
 {
-    OalSound* oalSound = dynamic_cast<OalSound*>(sound); // TODO:: get rid off casting
+    OalSound* oalSound = dynamic_cast<OalSound*>(sound); // TODO:: get rid of casting
     ALuint sourceId = oalSound->GetSourceId();
 
-    if (sourceId) //
+    if (sourceId)
     {
         alCall(alSourcei, sourceId, AL_BUFFER, m_bufferID);
     }
@@ -141,7 +141,7 @@ void OalBuffer::AttachSource(Sound* sound)
 
 void OalBuffer::DetachSource(Sound* sound)
 {
-    OalSound* oalSound = dynamic_cast<OalSound*>(sound); // TODO:: get rid off casting
+    OalSound* oalSound = dynamic_cast<OalSound*>(sound); // TODO:: get rid of casting
     ALuint sourceId = oalSound->GetSourceId();
     
     if (sourceId)
