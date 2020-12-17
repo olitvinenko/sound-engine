@@ -14,7 +14,7 @@ OggDecoder::OggDecoder(const std::string& fileName)
 
 bool OggDecoder::decode()
 {
-    if (m_data == nullptr)
+    if (m_data.empty())
         return false;
     
     ov_callbacks callbacks;

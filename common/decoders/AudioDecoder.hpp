@@ -39,8 +39,7 @@ private:
     AudioDecoder& operator=(AudioDecoder&&) noexcept = delete;
 
 protected:
-    void*   m_data = nullptr;
-    size_t  m_size = 0;
+    std::vector<char> m_data;
     
     size_t  m_fileCurrPos = 0;
     std::string m_fileName;

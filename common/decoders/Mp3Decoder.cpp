@@ -10,7 +10,7 @@ Mp3Decoder::Mp3Decoder(const std::string& fileName)
 
 bool Mp3Decoder::decode()
 {
-    if (m_data == nullptr)
+    if (m_data.empty())
         return false;
 
     mp3_callbacks callbacks;

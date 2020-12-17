@@ -9,10 +9,10 @@
 size_t AudioDecoder::fileRead(void* ptr, size_t size, size_t nmemb, void* datasource)
 {
     AudioDecoder* decoder = (AudioDecoder*)datasource;
-    size_t toReadBytes = std::min((size_t)(decoder->m_size - decoder->m_fileCurrPos), (size_t)(nmemb * size));
+    size_t toReadBytes = std::min((size_t)(decoder->m_data.size() - decoder->m_fileCurrPos), (size_t)(nmemb * size));
     if (toReadBytes > 0)
     {
-        memcpy(ptr, (unsigned char*) decoder->m_data + decoder->m_fileCurrPos, toReadBytes);
+        std::copy(decoder->m_data.data() + decoder->m_fileCurrPos, decoder->m_data.data() + decoder->m_fileCurrPos + toReadBytes, (char*)ptr);
         decoder->m_fileCurrPos += toReadBytes;
     }
 
@@ -27,12 +27,15 @@ int AudioDecoder::fileSeek(void* datasource, int64_t offset, int whence)
     else if (whence == SEEK_CUR)
         decoder->m_fileCurrPos = decoder->m_fileCurrPos + offset;
     else if (whence == SEEK_END)
-        decoder->m_fileCurrPos = decoder->m_size;
+        decoder->m_fileCurrPos = decoder->m_data.size();
     return 0;
 }
 
 int AudioDecoder::fileClose(void* datasource)
 {
+    AudioDecoder* decoder = (AudioDecoder*)datasource;
+    decoder->m_data.clear();
+
     return 0;
 }
 
@@ -55,9 +58,9 @@ std::unique_ptr<AudioDecoder> AudioDecoder::GetDecoderFor(const std::string& fil
     
     if(extension == "mp3")
         return std::unique_ptr<AudioDecoder>(new Mp3Decoder(fileName));
-    else if(extension == "wav")
+    if(extension == "wav")
         return std::unique_ptr<AudioDecoder>(new WavDecoder(fileName));
-    else if(extension == "ogg")
+    if(extension == "ogg")
         return std::unique_ptr<AudioDecoder>(new OggDecoder(fileName));
     
     return nullptr;
@@ -71,23 +74,14 @@ AudioDecoder::AudioDecoder(const std::string& fileName)
         return;
     
     fs.seekg(0, std::ios::end);
-    
-    m_size = fs.tellg();
-    m_data = malloc(m_size);
-    if (!m_data)
-    {
-        fs.close();
-        return; // throw std::bad_alloc();
-    }
-    
+    m_data.resize(fs.tellg());
+
     fs.seekg(0, std::ios::beg);
-    fs.read((char*)m_data, m_size);
+    fs.read(m_data.data(), m_data.size());
     
     fs.close();
 }
 
 AudioDecoder::~AudioDecoder()
 {
-    if (m_data)
-        free(m_data);
 }
