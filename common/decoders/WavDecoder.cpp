@@ -46,17 +46,15 @@ bool WavDecoder::decode()
     if (info.frames == 0)
         return false;
 
-    unsigned char* buf = nullptr;
-
 	const size_t bufSize = sizeof(short) * info.frames * info.channels;
     
-    buf = static_cast<unsigned char*>(malloc(bufSize));
+    unsigned char* buf = new (std::nothrow) unsigned char[bufSize];
     if (!buf)
         return false;
 
     sf_readf_short(handle.get(), reinterpret_cast<short*>(buf), info.frames);
 
-    m_buffer.insert(m_buffer.end(), buf, buf + bufSize);
+    m_buffer.assign(buf, buf + bufSize);
     m_channels = info.channels;
     m_sampleRate = info.samplerate;
     m_numFrames = info.frames;
@@ -65,6 +63,6 @@ bool WavDecoder::decode()
     const std::size_t samplesCount = m_duration * m_sampleRate;
     m_bitsPerSample = (m_buffer.size() / samplesCount / m_channels) * CHAR_BIT;
 
-    free(buf);
+    delete[] buf;
     return true;
 }

@@ -66,7 +66,7 @@ std::unique_ptr<AudioDecoder> AudioDecoder::GetDecoderFor(const std::string& fil
 AudioDecoder::AudioDecoder(const std::string& fileName)
     : m_fileName(fileName)
 {
-    std::fstream fs(fileName);
+    std::fstream fs(fileName, std::ios_base::in | std::ios_base::binary);
     if (!fs.is_open())
         return;
     
@@ -84,11 +84,18 @@ AudioDecoder::AudioDecoder(const std::string& fileName)
 
     fs.seekg(0, std::ios::beg);
     fs.read(m_data, m_size);
+
+    if (!fs)
+    {
+        delete[] m_data;
+        m_data = nullptr;
+    }
     
     fs.close();
 }
 
 AudioDecoder::~AudioDecoder()
 {
-	delete[] m_data;
+    if (m_data)
+		delete[] m_data;
 }

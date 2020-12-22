@@ -3,12 +3,33 @@
 #include "XAudio2Sound.hpp"
 #include "XAudio2Buffer.hpp"
 
-XAudio2Sound::XAudio2Sound(XAudio2Buffer* buffer, bool isAutoDelete)
+#define OPSETID 1U
+
+XAudio2Sound::XAudio2Sound(IXAudio2* xa2, XAudio2Buffer* buffer, bool isAutoDelete)
     : Sound(buffer, isAutoDelete)
 {
+    HRESULT hr = xa2->CreateSourceVoice(&m_source, &buffer->GetWaveFormatEx());
+    if (FAILED(hr))
+        return;
+
+    m_buffer->AttachSource(this);
 }
 
-bool XAudio2Sound::Play() { return false; }
+bool XAudio2Sound::Play()
+{
+    if (!IsValid())
+        return false;
+
+    if (IsPlaying())
+        return false;
+
+    SetLoop(m_isLoop);
+    SetVolume(m_volume);
+
+    HRESULT hr = m_source->Start(0, OPSETID);
+    return !FAILED(hr);
+}
+
 bool XAudio2Sound::Pause() { return false; }
 bool XAudio2Sound::Stop() { return false; }
 
@@ -26,7 +47,5 @@ bool XAudio2Sound::SetVolume(float volume) { return false; }
 float XAudio2Sound::GetVolume() const { return .0f; }
 
 float XAudio2Sound::GetDurationSec() const { return .0f; }
-
-bool XAudio2Sound::IsValid() const { return true; }
 
 #endif

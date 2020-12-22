@@ -6,12 +6,18 @@
 
 class XAudio2Buffer;
 
+struct IXAudio2;
+struct IXAudio2SourceVoice;
+
 class XAudio2Sound final : public Sound
 {
     friend class XAudio2Engine;
     
 private:
-    XAudio2Sound(XAudio2Buffer* buffer, bool isAutoDelete);
+    XAudio2Sound(IXAudio2* xa2, XAudio2Buffer* buffer, bool isAutoDelete);
+
+public:
+    IXAudio2SourceVoice* GetSourceVoice() const { return m_source; }
     
 private:
     bool Play() override;
@@ -33,7 +39,10 @@ private:
     
     float GetDurationSec() const override;
     
-    bool IsValid() const override;
+    bool IsValid() const override { return m_source; }
+
+private:
+    IXAudio2SourceVoice* m_source{ nullptr };
 };
 
 #endif
