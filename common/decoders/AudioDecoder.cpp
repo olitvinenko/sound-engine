@@ -66,16 +66,14 @@ std::unique_ptr<AudioDecoder> AudioDecoder::GetDecoderFor(const std::string& fil
 AudioDecoder::AudioDecoder(const std::string& fileName)
     : m_fileName(fileName)
 {
-    using int8_fstream = std::basic_fstream<int8_t, std::char_traits<int8_t>>;
-
-    int8_fstream fs(fileName);
+    std::fstream fs(fileName);
     if (!fs.is_open())
         return;
     
     fs.seekg(0, std::ios::end);
     m_size = fs.tellg();
 
-    m_data = new (std::nothrow) int8_t[m_size];
+    m_data = new (std::nothrow) char[m_size];
     std::memset(m_data, 0, m_size);
     if (!m_data)
     {

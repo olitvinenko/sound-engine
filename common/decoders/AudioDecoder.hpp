@@ -38,7 +38,7 @@ protected:
     static long fileTell(void* datasource);
     
 protected:
-    int8_t* m_data { nullptr };
+    char* m_data { nullptr };
     std::size_t m_size = 0;
     
     std::vector<char> m_buffer;
