@@ -14,7 +14,7 @@ OggDecoder::OggDecoder(const std::string& fileName)
 
 bool OggDecoder::decode()
 {
-    if (m_data.empty())
+    if (!m_data)
         return false;
     
     ov_callbacks callbacks;

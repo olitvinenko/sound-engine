@@ -21,7 +21,7 @@ int WavDecoder::onWavSeek(void* datasource, long offset, int whence)
 
 bool WavDecoder::decode()
 {
-    if (m_data.empty())
+    if (!m_data)
         return false;
     
     SF_INFO info;
@@ -38,7 +38,7 @@ bool WavDecoder::decode()
         if (hnd)
 			sf_close(hnd);
     };
-    std::unique_ptr<SNDFILE, decltype(handleDeleter)> handle(sf_open_read(m_fileName.c_str(), &info, &cb, this), handleDeleter);
+    std::unique_ptr<SNDFILE, decltype(handleDeleter)> handle(sf_open_read(GetFilePath().c_str(), &info, &cb, this), handleDeleter);
 
     if (!handle)
         return false;;
