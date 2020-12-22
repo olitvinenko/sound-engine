@@ -1,3 +1,5 @@
+#ifdef OPENAL_SOUND
+
 #include "OalUtils.hpp"
 
 #include <iostream>
@@ -68,3 +70,5 @@ namespace details
         return true;
     }
 }
+
+#endif
