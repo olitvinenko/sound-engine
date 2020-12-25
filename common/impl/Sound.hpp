@@ -3,17 +3,8 @@
 #include <string>
 #include <memory>
 
-#include "../include/ISound.hpp"
 #include "SoundBuffer.hpp"
-
-//class SoundBuffer;
-//class InternalEngine;
-struct InternalBuffer;
-
-class InternalSound : public SoundPtr
-{
-
-};
+#include "InternalSound.hpp"
 
 template<typename TSound>
 class Sound : public InternalSound
@@ -25,16 +16,40 @@ class Sound : public InternalSound
     }
 
 protected:
-    Sound(SoundBuffer<TSound>* buffer, bool isAutoDelete);
+    Sound(SoundBuffer<TSound>* buffer, bool isAutoDelete)
+        : m_currentTime(0)
+        , m_saveCurrentTime(0)
+        , m_isLoop(false)
+        , m_volume(100)
+        , m_duration(buffer->Duration())
+        , m_isAutoDelete(isAutoDelete)
+        , m_buffer(buffer)
+    {
+    }
 
     virtual bool IsValid() const = 0;
 
 public:
-    const std::string& GetFileName() const;
-    void Delete() final override;
+    const std::string& GetFileName() const
+    {
+        return m_buffer->GetFileName();
+    }
+    
+    void Delete() final override
+    {
+        if (!IsValid())
+            return;
+        
+        if (IsPlaying())
+            Stop();
+        
+        m_buffer->DetachSource(as_derived());
+    }
 
 protected:
-    ~Sound();
+    ~Sound()
+    {
+    }
   
 protected:
     float m_currentTime;
@@ -49,38 +64,3 @@ protected:
     SoundBuffer<TSound>* m_buffer{ nullptr };
 };
 
-
-template<typename TSound>
-Sound<TSound>::Sound(SoundBuffer<TSound>* buffer, bool isAutoDelete)
-    : m_currentTime(0)
-    , m_saveCurrentTime(0)
-    , m_isLoop(false)
-    , m_volume(100)
-    , m_duration(buffer->Duration())
-    , m_isAutoDelete(isAutoDelete)
-    , m_buffer(buffer)
-{
-}
-
-template<typename TSound>
-Sound<TSound>::~Sound()
-{
-}
-
-template<typename TSound>
-void Sound<TSound>::Delete()
-{
-    if (!IsValid())
-        return;
-
-    if (IsPlaying())
-        Stop();
-
-    m_buffer->DetachSource(as_derived());
-}
-
-template<typename TSound>
-const std::string& Sound<TSound>::GetFileName() const
-{
-    return m_buffer->GetFileName();
-}

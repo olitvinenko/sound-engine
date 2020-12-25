@@ -2,22 +2,25 @@
 
 #ifdef OPENAL_SOUND
 
-#include <OpenAL/OpenAL.h>
-
 #include "../SoundBuffer.hpp"
 
-class OalSoundEngine;
+#include <OpenAL/OpenAL.h>
 
-class OalBuffer final : public SoundBuffer
+
+#include "OalSound.hpp"
+
+struct InternalEngine;
+
+class OalBuffer final : public SoundBuffer<OalSound>
 {
 public:
-    OalBuffer(const std::string& fileName, OalSoundEngine* engine);
+    OalBuffer(const std::string& fileName, InternalEngine* engine);
     ~OalBuffer();
 
     bool LoadMemory() override { return LoadBuffer(); }
     
-    void AttachSource(Sound* sound) override;
-    void DetachSource(Sound* sound) override;
+    void AttachSource(OalSound* sound) override;
+    void DetachSource(OalSound* sound) override;
     
 private:
     bool IsActive() const override { return m_bufferID; }

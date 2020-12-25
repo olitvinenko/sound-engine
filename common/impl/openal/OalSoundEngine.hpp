@@ -12,7 +12,7 @@
 class OalBuffer;
 class OalSound;
 
-class OalSoundEngine final : public SoundEngine
+class OalSoundEngine final : public SoundEngine<OalSound, OalBuffer>
 {
 private:
     struct OalContextDeleter { void operator()(ALCcontext* context); };
@@ -25,8 +25,8 @@ public:
 private:
     bool IsValid() const override { return m_device && m_context; }
     
-    std::shared_ptr<Sound> CreateSound(SoundBuffer* buffer, bool isAutoDelete) override;
-    std::shared_ptr<SoundBuffer> CreateBuffer(const std::string& file) override;
+    std::shared_ptr<OalSound> CreateSound(OalBuffer* buffer, bool isAutoDelete) override;
+    std::shared_ptr<OalBuffer> CreateBuffer(const std::string& file) override;
 
 private:
     std::unique_ptr<ALCdevice, OalDeviceDeleter> m_device;

@@ -3,8 +3,6 @@
 #include "OalBuffer.hpp"
 
 #include "OalSound.hpp"
-#include "OalSoundEngine.hpp"
-
 #include "OalUtils.hpp"
 
 #include "../../decoders/AudioDecoder.hpp"
@@ -30,7 +28,7 @@ static ALint GetFormatSound(ALint channels, ALint bitsPerSample)
     return format;
 }
 
-OalBuffer::OalBuffer(const std::string& fileName, OalSoundEngine* engine)
+OalBuffer::OalBuffer(const std::string& fileName, InternalEngine* engine)
     : SoundBuffer(fileName, engine)
 {
     bool isLoaded = LoadBuffer();
@@ -126,30 +124,28 @@ OalBuffer::~OalBuffer()
 //    return sourceID;
 //}
 
-void OalBuffer::AttachSource(Sound* sound)
+void OalBuffer::AttachSource(OalSound* sound)
 {
-    OalSound* oalSound = dynamic_cast<OalSound*>(sound); // TODO:: get rid of casting
-    ALuint sourceId = oalSound->GetSourceId();
+    ALuint sourceId = sound->GetSourceId();
 
     if (sourceId)
     {
         alCall(alSourcei, sourceId, AL_BUFFER, m_bufferID);
     }
     
-    SoundBuffer::AttachSource(sound);
+    SoundBuffer<OalSound>::AttachSource(sound);
 }
 
-void OalBuffer::DetachSource(Sound* sound)
+void OalBuffer::DetachSource(OalSound* sound)
 {
-    OalSound* oalSound = dynamic_cast<OalSound*>(sound); // TODO:: get rid of casting
-    ALuint sourceId = oalSound->GetSourceId();
+    ALuint sourceId = sound->GetSourceId();
     
     if (sourceId)
     {
         alCall(alSourcei, sourceId, AL_BUFFER, 0);
     }
     
-    SoundBuffer::DetachSource(sound);
+    SoundBuffer<OalSound>::DetachSource(sound);
 }
 
 #endif

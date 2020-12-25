@@ -9,15 +9,18 @@
 
 class OalBuffer;
 
-class OalSound final : public Sound
+class OalSound final : public Sound<OalSound>
 {
     friend class OalSoundEngine;
     
-private:
+    template<typename, typename>
+    friend class SoundEngine;
+    
+public:
     OalSound(OalBuffer* buffer, bool isAutoDelete);
     ~OalSound();
 
-public:
+private:
     bool Play() override;
     bool Pause() override;
     bool Stop() override;

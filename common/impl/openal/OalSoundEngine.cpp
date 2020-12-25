@@ -57,12 +57,12 @@ OalSoundEngine::~OalSoundEngine()
     m_device.reset();
 }
 
-std::shared_ptr<Sound> OalSoundEngine::CreateSound(SoundBuffer* buffer, bool isAutoDelete)
+std::shared_ptr<OalSound> OalSoundEngine::CreateSound(OalBuffer* buffer, bool isAutoDelete)
 {
-    return std::shared_ptr<Sound>(new OalSound((OalBuffer*)buffer, isAutoDelete), [](OalSound* sound) { delete sound; });
+    return std::make_shared<OalSound>(buffer, isAutoDelete);
 }
 
-std::shared_ptr<SoundBuffer> OalSoundEngine::CreateBuffer(const std::string& file)
+std::shared_ptr<OalBuffer> OalSoundEngine::CreateBuffer(const std::string& file)
 {
     return std::make_shared<OalBuffer>(file, this);
 }
