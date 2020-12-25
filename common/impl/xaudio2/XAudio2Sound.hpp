@@ -9,16 +9,19 @@ class XAudio2Buffer;
 struct IXAudio2;
 struct IXAudio2SourceVoice;
 
-class XAudio2Sound final : public Sound
+class XAudio2Sound final : public Sound<XAudio2Sound>
 {
     friend class XAudio2Engine;
+
+    template<typename, typename>
+    friend class SoundEngine;
     
 private:
     XAudio2Sound(IXAudio2* xa2, XAudio2Buffer* buffer, bool isAutoDelete);
 
 public:
     IXAudio2SourceVoice* GetSourceVoice() const { return m_source; }
-    
+
 private:
     bool Play() override;
     bool Pause() override;

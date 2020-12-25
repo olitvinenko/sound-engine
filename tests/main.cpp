@@ -44,9 +44,11 @@ void testFile(const char* filePath)
 #include <thread>
 #include <chrono>
 
+const char* TEST_SOUND_NAME = "Retrigger.wav";//"file_example_MP3_2MG.mp3";//"Retrigger.wav";
+
 SoundHandle MakeHandle(ISoundEngine* engine)
 {
-    SoundHandle handle = engine->GetSound("Retrigger.mp3", false);
+    SoundHandle handle = engine->GetSound(TEST_SOUND_NAME, false);
     handle->SetLoop(true);
     handle->Play();
     return handle;
@@ -54,6 +56,24 @@ SoundHandle MakeHandle(ISoundEngine* engine)
 
 int main()
 {
+//    auto decoder = AudioDecoder::GetDecoderFor(TEST_SOUND_NAME);
+//    if (!decoder->decode())
+//    {
+//        return EXIT_FAILURE;
+//    }
+//
+//    std::cout << "File = " << decoder->GetFilePath() << std::endl;
+//    std::cout << "Duration = " << decoder->GetDuration() << std::endl;
+//    std::cout << "Channels = " << decoder->GetChannels() << std::endl;
+//    std::cout << "SampleRate = " << decoder->GetSampleRate() << std::endl;
+//    std::cout << "BitsPerSample = " << decoder->GetBitsPerSample() << std::endl;
+//    std::cout << "NumFrames = " << decoder->GetNumFrames() << std::endl;
+//    std::cout << "Buffer.size() = " << decoder->GetBuffer().size() << std::endl;
+//
+//
+//    return EXIT_SUCCESS;
+
+
 //    testFile("free_game_music_advanced.mp3");std::cout << std::endl;
 //    testFile("file_example_WAV_2MG.wav");std::cout << std::endl;
 //    testFile("default.ogg");
@@ -79,18 +99,26 @@ int main()
     
     
     {
-        SoundHandle h1 = engine->GetSound("Retrigger.mp3", false);
+        SoundHandle h1 = engine->GetSound(TEST_SOUND_NAME, false);
         h1->SetLoop(true);
         h1->Play();
+
+        //while (1)
+        //{
+        //    engine->Update(2);
+        //}
+
+        //std::this_thread::sleep_for(std::chrono::seconds(40));
+        //return 0;
         
         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        SoundHandle h2 = engine->GetSound("Retrigger.mp3", false);
+        SoundHandle h2 = engine->GetSound(TEST_SOUND_NAME, false);
         h2->SetLoop(true);
         h2->Play();
         
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-            SoundHandle h3 = engine->GetSound("Retrigger.mp3", false);
+            SoundHandle h3 = engine->GetSound(TEST_SOUND_NAME, false);
             h3->SetLoop(true);
             h3->Play();
 
@@ -103,7 +131,7 @@ int main()
                 }
 
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-                SoundHandle h4 = engine->GetSound("Retrigger.mp3", false);
+                SoundHandle h4 = engine->GetSound(TEST_SOUND_NAME, false);
                 h4->SetLoop(true);
                 h4->Play();
 
@@ -111,7 +139,7 @@ int main()
             }
         }
         
-        engine->PlayOnce("Retrigger.mp3");
+        engine->PlayOnce(TEST_SOUND_NAME);
 
         int c = 0;
         while (h1)
@@ -130,11 +158,11 @@ int main()
     }
     
     {
-        SoundHandle h1 = engine->GetSound("Retrigger.mp3", false);
+        SoundHandle h1 = engine->GetSound(TEST_SOUND_NAME, false);
         h1->SetLoop(true);
         h1->Play();
         
-        SoundHandle h2 = engine->GetSound("Retrigger.mp3", false);
+        SoundHandle h2 = engine->GetSound(TEST_SOUND_NAME, false);
         h2->SetLoop(true);
         h2->Play();
         

@@ -1,11 +1,12 @@
 #include "SoundHandle.hpp"
 #include "ISound.hpp"
 #include <cassert>
+#include <utility>
 
-using sound_ptr = std::shared_ptr<ISound>;
+using sound_ptr = std::shared_ptr<SoundPtr>;
 
-SoundHandle::SoundHandle(std::weak_ptr<ISound> sound)
-   : m_sound(sound)
+SoundHandle::SoundHandle(std::weak_ptr<SoundPtr> sound)
+   : m_sound(std::move(sound))
 {
     sound_ptr ptr = *this;
     if (ptr)
@@ -48,7 +49,7 @@ SoundHandle& SoundHandle::operator=(const SoundHandle& handle)
         return *this;
     
     sound_ptr thisPtr = *this;
-    sound_ptr otherPtr = handle.operator sound_ptr ();
+    const sound_ptr otherPtr = handle.operator sound_ptr ();
     
     if (thisPtr == otherPtr)
         return *this;
@@ -79,4 +80,6 @@ SoundHandle::~SoundHandle()
     
     if (!sound->m_handlesCount)
         sound->Delete();
+
+    assert(sound.use_count() == 1);
 }

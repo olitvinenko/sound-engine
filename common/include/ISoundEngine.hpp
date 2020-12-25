@@ -16,7 +16,4 @@ struct ISoundEngine
     virtual void Update(float deltaTime) = 0;
     
     static std::unique_ptr<ISoundEngine> Create();
-    
-protected:
-    SoundHandle CreateHandle(std::shared_ptr<ISound> sound) { return SoundHandle(sound); }
 };

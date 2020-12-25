@@ -6,17 +6,17 @@
 
 #include <xaudio2.h>
 
-class SoundEngine;
+struct InternalEngine;
 
-class XAudio2Buffer final : public SoundBuffer
+class XAudio2Buffer final : public SoundBuffer<XAudio2Sound>
 {
 public:
-    XAudio2Buffer(const std::string& fileName, SoundEngine* engine);
-
-    void AttachSource(Sound* sound) override;
-    void DetachSource(Sound* sound) override;
+    XAudio2Buffer(const std::string& fileName, InternalEngine* engine);
 
     const WAVEFORMATEX& GetWaveFormatEx() const { return m_wfEx; }
+
+    void AttachSource(XAudio2Sound* sound) override;
+    void DetachSource(XAudio2Sound* sound) override;
 
 private:
     bool LoadBuffer();

@@ -61,15 +61,20 @@ void XAudio2Engine::Update(float deltaTime)
 	    // ???
     }
 
-    SoundEngine::Update(deltaTime);
+    SoundEngine<XAudio2Sound, XAudio2Buffer>::Update(deltaTime);
 }
 
-std::shared_ptr<Sound> XAudio2Engine::CreateSound(SoundBuffer* buffer, bool isAutoDelete)
+XAudio2Sound* XAudio2Engine::MakeSound(XAudio2Buffer* buffer, bool isAutoDelete)
 {
-    return std::shared_ptr<Sound>(new XAudio2Sound(m_xa2.Get(), (XAudio2Buffer*)buffer, isAutoDelete), [](XAudio2Sound* sound) { delete sound; });
+    return new XAudio2Sound(m_xa2.Get(), buffer, isAutoDelete);
 }
 
-std::shared_ptr<SoundBuffer> XAudio2Engine::CreateBuffer(const std::string& file)
+std::shared_ptr<XAudio2Sound> XAudio2Engine::CreateSound(XAudio2Buffer* buffer, bool isAutoDelete)
+{
+    return  std::shared_ptr<XAudio2Sound>(new XAudio2Sound(m_xa2.Get(), buffer, isAutoDelete), [](XAudio2Sound* sound) { delete sound; });
+}
+
+std::shared_ptr<XAudio2Buffer> XAudio2Engine::CreateBuffer(const std::string& file)
 {
     return std::make_shared<XAudio2Buffer>(file, this);
 }

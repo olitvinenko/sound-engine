@@ -8,7 +8,7 @@
 #include "../../decoders/AudioDecoder.hpp"
 
 
-XAudio2Buffer::XAudio2Buffer(const std::string& fileName, SoundEngine* engine)
+XAudio2Buffer::XAudio2Buffer(const std::string& fileName, InternalEngine* engine)
 : SoundBuffer(fileName, engine)
 , m_wfEx()
 , m_xa2Buffer()
@@ -51,35 +51,36 @@ bool XAudio2Buffer::LoadBuffer()
 }
 
 
-void XAudio2Buffer::AttachSource(Sound* sound)
+void XAudio2Buffer::AttachSource(XAudio2Sound* sound)
 {
-    XAudio2Sound* x2Sound = dynamic_cast<XAudio2Sound*>(sound); // TODO::
-    IXAudio2SourceVoice* x2Voice = x2Sound->GetSourceVoice();
+    IXAudio2SourceVoice* x2Voice = sound->GetSourceVoice();
 
     if (x2Voice)
     {
-        HRESULT res = x2Voice->SubmitSourceBuffer(&m_xa2Buffer);
-        if (!SUCCEEDED(res))
+        if (!SUCCEEDED(x2Voice->SubmitSourceBuffer(&m_xa2Buffer)))
         {
-	       return;
+            //TODO::
+	        return;
         }
     }
 
-    SoundBuffer::AttachSource(sound);
+    SoundBuffer<XAudio2Sound>::AttachSource(sound);
 }
 
-void XAudio2Buffer::DetachSource(Sound* sound)
+void XAudio2Buffer::DetachSource(XAudio2Sound* sound)
 {
-    XAudio2Sound* x2Sound = dynamic_cast<XAudio2Sound*>(sound); // TODO::
-    IXAudio2SourceVoice* x2Voice = x2Sound->GetSourceVoice();
+    IXAudio2SourceVoice* x2Voice = sound->GetSourceVoice();
 
     if (x2Voice)
     {
-        HRESULT res = x2Voice->SubmitSourceBuffer(nullptr);
-        if (!SUCCEEDED(res)) {}
+        if (!SUCCEEDED(x2Voice->SubmitSourceBuffer(nullptr)))
+        {
+            //TODO::
+            //return;
+        }
     }
 
-    SoundBuffer::DetachSource(sound);
+    SoundBuffer<XAudio2Sound>::DetachSource(sound);
 }
 
 #endif

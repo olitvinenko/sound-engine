@@ -12,7 +12,7 @@ XAudio2Sound::XAudio2Sound(IXAudio2* xa2, XAudio2Buffer* buffer, bool isAutoDele
     if (FAILED(hr))
         return;
 
-    m_buffer->AttachSource(this);
+    //m_buffer->AttachSource(this);
 }
 
 bool XAudio2Sound::Play()
@@ -26,8 +26,7 @@ bool XAudio2Sound::Play()
     SetLoop(m_isLoop);
     SetVolume(m_volume);
 
-    HRESULT hr = m_source->Start(0, OPSETID);
-    return !FAILED(hr);
+    return SUCCEEDED(m_source->Start(0, OPSETID));
 }
 
 bool XAudio2Sound::Pause() { return false; }

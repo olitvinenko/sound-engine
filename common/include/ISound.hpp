@@ -2,10 +2,6 @@
 
 struct ISound
 {
-private:
-    friend class SoundHandle;
-    
-public:
     virtual bool Play() = 0;
     virtual bool Pause() = 0;
     virtual bool Stop() = 0;
@@ -24,10 +20,18 @@ public:
     virtual float GetVolume() const = 0;
     
     virtual float GetDurationSec() const = 0;
-    
+
 protected:
     virtual ~ISound() = default;
+};
+
+class SoundPtr : public ISound
+{
+    friend class SoundHandle;
+
+protected:
     virtual void Delete() = 0;
+
 private:
-    unsigned int m_handlesCount { 0 };
+    std::size_t m_handlesCount{ 0 };
 };
