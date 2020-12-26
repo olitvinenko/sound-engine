@@ -9,47 +9,20 @@
 template<typename TSound>
 class Sound : public InternalSound
 {
-    TSound* as_derived() noexcept
-    {
-        static_assert(std::is_base_of<Sound<TSound>, TSound>::value, "");
-        return static_cast<TSound*>(this);
-    }
+    TSound* as_derived() noexcept;
 
 protected:
-    Sound(SoundBuffer<TSound>* buffer, bool isAutoDelete)
-        : m_currentTime(0)
-        , m_saveCurrentTime(0)
-        , m_isLoop(false)
-        , m_volume(100)
-        , m_duration(buffer->Duration())
-        , m_isAutoDelete(isAutoDelete)
-        , m_buffer(buffer)
-    {
-    }
+    Sound(SoundBuffer<TSound>* buffer, bool isAutoDelete);
 
     virtual bool IsValid() const = 0;
 
 public:
-    const std::string& GetFileName() const
-    {
-        return m_buffer->GetFileName();
-    }
+    const std::string& GetFileName() const;
     
-    void Delete() final override
-    {
-        if (!IsValid())
-            return;
-        
-        if (IsPlaying())
-            Stop();
-        
-        m_buffer->DetachSource(as_derived());
-    }
+    void Delete() final override;
 
 protected:
-    ~Sound()
-    {
-    }
+    ~Sound();
   
 protected:
     float m_currentTime;
@@ -64,3 +37,4 @@ protected:
     SoundBuffer<TSound>* m_buffer{ nullptr };
 };
 
+#include "Sound.cpp"

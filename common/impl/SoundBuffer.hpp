@@ -15,16 +15,8 @@ class SoundBuffer : public InternalBuffer
 {
     using sound_ptr = std::shared_ptr<TSound>;
 protected:
-    SoundBuffer(const std::string& fileName, InternalEngine* engine)
-        : m_fileName(fileName)
-        , m_soundEngine(engine)
-    {
-    }
-    
-    virtual ~SoundBuffer()
-    {
-        UnloadAllSources();
-    }
+    SoundBuffer(const std::string& fileName, InternalEngine* engine);
+    virtual ~SoundBuffer();
     
 public:
     
@@ -34,43 +26,16 @@ public:
     const std::string& GetFileName() const  { return m_fileName; }
     
     virtual bool LoadMemory() = 0;
-    bool CanBeErased() const
-    {
-        if (!m_sources.empty())
-            return false;
-
-        if (!IsActive())
-            return false;
-
-        return true;
-    }
+    bool CanBeErased() const;
     
     float GetSizeMem() const { return m_sizeMemory; }
 
-    virtual void AttachSource(TSound* sound)
-    {
-        m_sources.insert(sound);
-        m_soundEngine->OnSourceCreated(this, sound);
-    }
+    virtual void AttachSource(TSound* sound);
     
-    virtual void DetachSource(TSound* sound)
-    {
-        m_sources.erase(sound);
-        m_soundEngine->OnSourceRemoved(this, sound);
-    }
+    virtual void DetachSource(TSound* sound);
 
 protected:
-    void UnloadAllSources()
-    {
-        auto it = m_sources.begin();
-        while (it != m_sources.end())
-        {
-            (*it)->Delete();
-            it = m_sources.begin();
-        }
-
-        assert(m_sources.empty());
-    }
+    void UnloadAllSources();
 private:
     std::unordered_set<TSound*> m_sources;
     std::string m_fileName;
@@ -80,3 +45,5 @@ protected:
     float       m_duration { .0f };
     float       m_sizeMemory { .0f };
 };
+
+#include "SoundBuffer.cpp"
