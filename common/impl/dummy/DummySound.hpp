@@ -6,9 +6,12 @@
 
 class DummyBuffer;
 
-class DummySound final : public Sound
+class DummySound final : public Sound<DummySound>
 {
     friend class DummyEngine;
+    
+    template<typename, typename>
+    friend class SoundEngine;
     
 private:
     DummySound(DummyBuffer* buffer, bool isAutoDelete);

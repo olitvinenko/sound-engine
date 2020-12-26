@@ -1,13 +1,14 @@
 #pragma once
 
 #include "../SoundBuffer.hpp"
+#include "DummySound.hpp"
 
-class SoundEngine;
+struct InternalEngine;
 
-class DummyBuffer final : public SoundBuffer
+class DummyBuffer final : public SoundBuffer<DummySound>
 {
 public:
-    DummyBuffer(const std::string& fileName, SoundEngine* engine);
+    DummyBuffer(const std::string& fileName, InternalEngine* engine);
     
 private:
     bool LoadMemory() override { return true; }

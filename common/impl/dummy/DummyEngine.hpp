@@ -2,11 +2,14 @@
 
 #include "../SoundEngine.hpp"
 
-class DummyEngine final : public SoundEngine
+class DummyBuffer;
+class DummySound;
+
+class DummyEngine final : public SoundEngine<DummySound, DummyBuffer>
 {
 private:
     bool IsValid() const override { return true; }
     
-    std::shared_ptr<Sound> CreateSound(SoundBuffer* buffer, bool isAutoDelete) override;
-    std::shared_ptr<SoundBuffer> CreateBuffer(const std::string& file) override;
+    std::shared_ptr<DummySound> CreateSound(DummyBuffer* buffer, bool isAutoDelete) override;
+    std::shared_ptr<DummyBuffer> CreateBuffer(const std::string& file) override;
 };
