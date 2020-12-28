@@ -4,6 +4,8 @@
 #include "XAudio2Sound.hpp"
 #include "XAudio2Buffer.hpp"
 
+#include "XAudio2Utils.hpp"
+
 std::unique_ptr<ISoundEngine> ISoundEngine::Create()
 {
     return std::unique_ptr<ISoundEngine>(new XAudio2Engine());
@@ -15,11 +17,10 @@ void XAudio2Engine::VoiceDeleter::operator()(IXAudio2Voice* voice)
     voice->DestroyVoice();
 }
 
+
 XAudio2Engine::XAudio2Engine()
 {
-    HRESULT hr;
-    hr = XAudio2Create(m_xa2.ReleaseAndGetAddressOf());
-    if (FAILED(hr))
+    if (!x2Call(XAudio2Create, m_xa2.ReleaseAndGetAddressOf(), 0, XAUDIO2_DEFAULT_PROCESSOR))
         return;
 
 #ifndef NDEBUG
@@ -33,14 +34,11 @@ XAudio2Engine::XAudio2Engine()
     m_xa2->SetDebugConfiguration(&config);
 #endif
 
-    hr = CoInitialize(nullptr);
-    if (FAILED(hr))
+    if (!x2Call(CoInitialize, nullptr))
         return;
 
     IXAudio2MasteringVoice* mastering_voice = nullptr;
-    hr = m_xa2->CreateMasteringVoice(&mastering_voice, 2, 44100);
-
-    if (FAILED(hr))
+    if (FAILED(m_xa2->CreateMasteringVoice(&mastering_voice, 2, 44100)))
         return;
 
     m_mastering_voice.reset(mastering_voice);
@@ -49,9 +47,6 @@ XAudio2Engine::XAudio2Engine()
 XAudio2Engine::~XAudio2Engine()
 {
 }
-
-//TODO:: move to sepparate file
-#define OPSETID 1U
 
 void XAudio2Engine::Update(float deltaTime)
 {
@@ -62,11 +57,6 @@ void XAudio2Engine::Update(float deltaTime)
     }
 
     SoundEngine<XAudio2Sound, XAudio2Buffer>::Update(deltaTime);
-}
-
-XAudio2Sound* XAudio2Engine::MakeSound(XAudio2Buffer* buffer, bool isAutoDelete)
-{
-    return new XAudio2Sound(m_xa2.Get(), buffer, isAutoDelete);
 }
 
 std::shared_ptr<XAudio2Sound> XAudio2Engine::CreateSound(XAudio2Buffer* buffer, bool isAutoDelete)

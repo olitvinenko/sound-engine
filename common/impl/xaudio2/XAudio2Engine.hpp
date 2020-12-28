@@ -26,8 +26,6 @@ private:
     void Update(float deltaTime) override;
     bool IsValid() const override { return true; }
 
-    XAudio2Sound* MakeSound(XAudio2Buffer* buffer, bool isAutoDelete) override;
-
     std::shared_ptr<XAudio2Sound> CreateSound(XAudio2Buffer* buffer, bool isAutoDelete) override;
     std::shared_ptr<XAudio2Buffer> CreateBuffer(const std::string& file) override;
 

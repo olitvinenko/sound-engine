@@ -1,9 +1,11 @@
+
 #ifdef X2AUDIO_SOUND
 
 #include "XAudio2Sound.hpp"
 #include "XAudio2Buffer.hpp"
 
-#define OPSETID 1U
+#include "XAudio2Utils.hpp"
+
 
 XAudio2Sound::XAudio2Sound(IXAudio2* xa2, XAudio2Buffer* buffer, bool isAutoDelete)
     : Sound(buffer, isAutoDelete)
