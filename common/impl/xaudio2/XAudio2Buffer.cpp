@@ -1,6 +1,7 @@
 
 #include "XAudio2Sound.hpp"
 #include <iostream>
+#include "XAudio2Utils.hpp"
 #ifdef X2AUDIO_SOUND
 
 #include "XAudio2Buffer.hpp"
@@ -57,7 +58,7 @@ void XAudio2Buffer::AttachSource(XAudio2Sound* sound)
 
     if (x2Voice)
     {
-        if (!SUCCEEDED(x2Voice->SubmitSourceBuffer(&m_xa2Buffer)))
+        if (!x2WrapCall(x2Voice->SubmitSourceBuffer(&m_xa2Buffer)))
         {
             //TODO::
 	        return;

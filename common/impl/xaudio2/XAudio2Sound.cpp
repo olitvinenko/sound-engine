@@ -10,11 +10,8 @@
 XAudio2Sound::XAudio2Sound(IXAudio2* xa2, XAudio2Buffer* buffer, bool isAutoDelete)
     : Sound(buffer, isAutoDelete)
 {
-    HRESULT hr = xa2->CreateSourceVoice(&m_source, &buffer->GetWaveFormatEx());
-    if (FAILED(hr))
-        return;
-
-    //m_buffer->AttachSource(this);
+	const auto callResult = x2WrapCall(xa2->CreateSourceVoice(&m_source, &buffer->GetWaveFormatEx()));  
+    assert(callResult);
 }
 
 bool XAudio2Sound::Play()
@@ -28,7 +25,7 @@ bool XAudio2Sound::Play()
     SetLoop(m_isLoop);
     SetVolume(m_volume);
 
-    return SUCCEEDED(m_source->Start(0, OPSETID));
+    return x2WrapCall(m_source->Start(0, OPSETID));
 }
 
 bool XAudio2Sound::Pause() { return false; }

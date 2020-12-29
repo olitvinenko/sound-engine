@@ -4,22 +4,14 @@
 
 #define OPSETID 1U
 
-#include <winerror.h>
+#include "../Utils.hpp"
+
 #include <windows.h>
 #include <strsafe.h>
 
 #include <iostream>
 #include <string>
 #include <type_traits>
-
-template<typename... Ts> struct make_void { using type = void; };
-template<typename... Ts> using void_t = typename make_void<Ts...>::type;
-
-template <typename T, typename S, typename = void>
-struct has_output_operator : std::false_type {};
-
-template <typename T, typename S>
-struct has_output_operator<T, S, void_t<decltype(std::declval<S>() << std::declval<T>())>> : std::true_type {};
 
 template<typename T>
 class XAudio2CallResult
@@ -84,23 +76,14 @@ private:
     const std::uint_fast32_t m_line;
 };
 
-
-template<typename Function, typename Stream, typename... Params>
-auto x2CallImpl(const char* filename,
-    const std::uint_fast32_t line,
-    Stream& stream,
-    Function function,
-    Params ... params)
--> typename std::enable_if<std::is_same<HRESULT, decltype(function(params...))>::value, XAudio2CallResult<HRESULT>>::type
+template<typename T, typename S>
+XAudio2CallResult<T> WrapAndCheck(S& stream, const T& value, bool error, const char* filename, const std::uint_fast32_t line)
 {
-    static_assert(has_output_operator<XAudio2CallResult<HRESULT>, Stream>::value, "");
+    static_assert(has_output_operator<XAudio2CallResult<T>, S>::value, "");
 
-    HRESULT hr = function(std::forward<Params>(params)...);
-
-    auto result = XAudio2CallResult<HRESULT>
-    {
-        hr,
-        FAILED(hr),
+    XAudio2CallResult<T> result{
+		value,
+        error,
         filename,
         line
     };
@@ -116,15 +99,67 @@ auto x2CallImpl(const char* filename,
     const std::uint_fast32_t line,
     Stream& stream,
     Function function,
-    Params ... params)
--> typename std::enable_if<!std::is_same<HRESULT, decltype(function(params...))>::value, XAudio2CallResult<decltype(function(params...))>>::type
+    Params&& ... params)
+-> typename std::enable_if<
+    std::is_same<HRESULT, decltype(function(params...))>::value && !std::is_member_function_pointer<Function>::value
+, XAudio2CallResult<HRESULT>>::type
 {
-    static_assert(has_output_operator<XAudio2CallResult<decltype(function(params...))>, Stream>::value, "");
+    HRESULT hr = function(std::forward<Params>(params)...);
+    return WrapAndCheck(stream, hr, FAILED(hr), filename, line);
+}
 
-    auto result = XAudio2CallResult<decltype(function(params...))>
-    {
-        function(std::forward<Params>(params)...),
-        ::GetLastError() != 0,
+template<typename Function, typename Stream, typename... Params>
+auto x2CallImpl(const char* filename,
+    const std::uint_fast32_t line,
+    Stream& stream,
+    Function function,
+    Params&& ... params)
+-> typename std::enable_if<
+    !std::is_same<HRESULT, decltype(function(params...))>::value && !std::is_member_function_pointer<Function>::value,
+XAudio2CallResult<decltype(function(params...))>>::type
+{
+    auto ret = function(std::forward<Params>(params)...);
+    return WrapAndCheck(stream, ret, ::GetLastError() != 0, filename, line);
+}
+
+template<typename Function, typename Stream, typename Obj, typename... Params>
+auto x2CallImpl(const char* filename,
+    const std::uint_fast32_t line,
+    Stream& stream,
+    Function function,
+    Obj* obj,
+    Params && ... params
+)-> typename std::enable_if<
+    std::is_same<HRESULT, decltype((obj->*function)(params...))>::value && std::is_member_function_pointer<Function>::value
+, XAudio2CallResult<HRESULT>>::type
+{
+    HRESULT hr = (obj->*function)(std::forward<Params>(params)...);
+    return WrapAndCheck(stream, hr, FAILED(hr), filename, line);
+}
+
+template<typename Function, typename Stream, typename Obj, typename... Params>
+auto x2CallImpl(const char* filename,
+    const std::uint_fast32_t line,
+    Stream& stream,
+    Function function,
+    Obj* obj,
+    Params&& ... params
+)-> typename std::enable_if<
+    !std::is_same<HRESULT, decltype((obj->*function)(params...))>::value && std::is_member_function_pointer<Function>::value,
+XAudio2CallResult<decltype((obj->*function)(params...))>>::type
+{
+    auto ret = (obj->*function)(std::forward<Params>(params)...);
+    return WrapAndCheck(stream, ret, ::GetLastError() != 0, filename, line);
+}
+
+template<typename S>
+XAudio2CallResult<HRESULT> FromHResult(const char* filename, const std::uint_fast32_t line, S& stream, HRESULT value)
+{
+    static_assert(has_output_operator<XAudio2CallResult<HRESULT>, S>::value, "");
+
+    XAudio2CallResult<HRESULT> result{
+        value,
+        FAILED(value),
         filename,
         line
     };
@@ -136,5 +171,6 @@ auto x2CallImpl(const char* filename,
 }
 
 #define x2Call(function, ...) x2CallImpl(__FILE__, __LINE__, std::cerr, function, __VA_ARGS__)
+#define x2WrapCall(result) FromHResult(__FILE__, __LINE__, std::cerr, result)
 
 #endif

@@ -17,7 +17,6 @@ void XAudio2Engine::VoiceDeleter::operator()(IXAudio2Voice* voice)
     voice->DestroyVoice();
 }
 
-
 XAudio2Engine::XAudio2Engine()
 {
     if (!x2Call(XAudio2Create, m_xa2.ReleaseAndGetAddressOf(), 0, XAUDIO2_DEFAULT_PROCESSOR))
@@ -38,7 +37,9 @@ XAudio2Engine::XAudio2Engine()
         return;
 
     IXAudio2MasteringVoice* mastering_voice = nullptr;
-    if (FAILED(m_xa2->CreateMasteringVoice(&mastering_voice, 2, 44100)))
+
+    const auto callResult = x2WrapCall(m_xa2->CreateMasteringVoice(&mastering_voice, 2, 44100));
+    if (!callResult)
         return;
 
     m_mastering_voice.reset(mastering_voice);
@@ -50,10 +51,9 @@ XAudio2Engine::~XAudio2Engine()
 
 void XAudio2Engine::Update(float deltaTime)
 {
-    HRESULT hr = m_xa2->CommitChanges(OPSETID);
-    if (FAILED(hr))
+    if (!x2WrapCall(m_xa2->CommitChanges(OPSETID)))
     {
-	    // ???
+	    //
     }
 
     SoundEngine<XAudio2Sound, XAudio2Buffer>::Update(deltaTime);
