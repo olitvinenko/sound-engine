@@ -14,6 +14,7 @@ public:
     XAudio2Buffer(const std::string& fileName, InternalEngine* engine);
 
     const WAVEFORMATEX& GetWaveFormatEx() const { return m_wfEx; }
+    XAUDIO2_BUFFER* GetX2Buffer() { return &m_xa2Buffer; }
 
     void AttachSource(XAudio2Sound* sound) override;
     void DetachSource(XAudio2Sound* sound) override;

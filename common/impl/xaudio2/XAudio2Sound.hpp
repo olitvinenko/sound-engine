@@ -2,14 +2,16 @@
 
 #ifdef X2AUDIO_SOUND
 
+#include <xaudio2.h>
+#include <bitset>
+
 #include "../Sound.hpp"
 
 class XAudio2Buffer;
 
-struct IXAudio2;
-struct IXAudio2SourceVoice;
-
-class XAudio2Sound final : public Sound<XAudio2Sound>
+class XAudio2Sound final
+	: public Sound<XAudio2Sound>
+	, public IXAudio2VoiceCallback
 {
     friend class XAudio2Engine;
 
@@ -20,9 +22,9 @@ private:
     XAudio2Sound(IXAudio2* xa2, XAudio2Buffer* buffer, bool isAutoDelete);
 
 public:
-    IXAudio2SourceVoice* GetSourceVoice() const { return m_source; }
+    IXAudio2SourceVoice* GetSourceVoice() const { return m_source.get(); }
 
-private:
+private: //ISound
     bool Play() override;
     bool Pause() override;
     bool Stop() override;
@@ -42,10 +44,37 @@ private:
     
     float GetDurationSec() const override;
     
-    bool IsValid() const override { return m_source; }
+    bool IsValid() const override { return static_cast<bool>(m_source); }
+
+private: //IXAudio2VoiceCallback
+    void OnVoiceProcessingPassStart(UINT32 BytesRequired) override;
+    void OnVoiceProcessingPassEnd() override;
+    void OnStreamEnd() override;
+    void OnBufferStart(void* pBufferContext) override;
+    void OnBufferEnd(void* pBufferContext) override;
+    void OnLoopEnd(void* pBufferContext) override;
+    void OnVoiceError(void* pBufferContext, HRESULT Error) override;
 
 private:
-    IXAudio2SourceVoice* m_source{ nullptr };
+    struct SourceDeleter
+    {
+        void operator()(IXAudio2SourceVoice*);
+    };
+
+    std::unique_ptr<IXAudio2SourceVoice, SourceDeleter> m_source;
+    XAudio2Buffer* m_x2Buffer { nullptr };
+
+    enum StateIndices
+    {
+	    PAUSED = 0,
+        PLAYING,
+        LOOPED,
+        STOPPED,
+
+        SIZE
+    };
+
+    std::bitset<StateIndices::SIZE> m_state;
 };
 
 #endif

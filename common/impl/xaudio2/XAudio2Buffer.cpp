@@ -34,18 +34,20 @@ bool XAudio2Buffer::LoadBuffer()
         0,
         0,
         0,
-        0
+        0,
     };
+
+    m_xa2Buffer.pContext = this;
 
     const std::size_t channelsCount = decoder->GetChannels();
     const std::size_t samplesPerSecond = decoder->GetSampleRate();
  
     m_wfEx.wFormatTag = WAVE_FORMAT_PCM;
-    m_wfEx.nChannels = channelsCount;
-    m_wfEx.nSamplesPerSec = samplesPerSecond;
+    m_wfEx.nChannels = static_cast<WORD>(channelsCount);
+    m_wfEx.nSamplesPerSec = static_cast<DWORD>(samplesPerSecond);
     m_wfEx.wBitsPerSample = 16;//decoder->GetBitsPerSample();
     m_wfEx.nBlockAlign = m_wfEx.nChannels * (m_wfEx.wBitsPerSample / 8);
-    m_wfEx.nAvgBytesPerSec = m_wfEx.nBlockAlign * samplesPerSecond;
+    m_wfEx.nAvgBytesPerSec = m_wfEx.nBlockAlign * static_cast<DWORD>(samplesPerSecond);
     m_wfEx.cbSize = 0; // size of extra information
 
 	return true;
@@ -74,7 +76,7 @@ void XAudio2Buffer::DetachSource(XAudio2Sound* sound)
 
     if (x2Voice)
     {
-        if (!SUCCEEDED(x2Voice->SubmitSourceBuffer(nullptr)))
+        if (!SUCCEEDED(x2Voice->FlushSourceBuffers()))
         {
             //TODO::
             //return;

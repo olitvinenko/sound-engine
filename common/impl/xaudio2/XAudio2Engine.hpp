@@ -23,8 +23,7 @@ public:
     ~XAudio2Engine();
 
 private:
-    void Update(float deltaTime) override;
-    bool IsValid() const override { return true; }
+    bool IsValid() const override { return true; } //TODO::
 
     std::shared_ptr<XAudio2Sound> CreateSound(XAudio2Buffer* buffer, bool isAutoDelete) override;
     std::shared_ptr<XAudio2Buffer> CreateBuffer(const std::string& file) override;

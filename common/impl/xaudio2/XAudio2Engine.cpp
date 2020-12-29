@@ -33,30 +33,25 @@ XAudio2Engine::XAudio2Engine()
     m_xa2->SetDebugConfiguration(&config);
 #endif
 
-    if (!x2Call(CoInitialize, nullptr))
+    if (!x2Call(CoInitializeEx, nullptr, COINIT_MULTITHREADED))
         return;
 
     IXAudio2MasteringVoice* mastering_voice = nullptr;
 
     const auto callResult = x2WrapCall(m_xa2->CreateMasteringVoice(&mastering_voice, 2, 44100));
     if (!callResult)
+    {
+        CoUninitialize();
         return;
+    }
 
     m_mastering_voice.reset(mastering_voice);
 }
 
 XAudio2Engine::~XAudio2Engine()
 {
-}
-
-void XAudio2Engine::Update(float deltaTime)
-{
-    if (!x2WrapCall(m_xa2->CommitChanges(OPSETID)))
-    {
-	    //
-    }
-
-    SoundEngine<XAudio2Sound, XAudio2Buffer>::Update(deltaTime);
+    if (m_mastering_voice)
+        CoUninitialize();
 }
 
 std::shared_ptr<XAudio2Sound> XAudio2Engine::CreateSound(XAudio2Buffer* buffer, bool isAutoDelete)

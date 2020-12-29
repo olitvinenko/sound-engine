@@ -28,8 +28,7 @@ private:
     SoundHandle PlaySound(const std::string& filePath, bool isAutoDelete) override final;
     SoundHandle GetSound(const std::string& filePath, bool isAutoDelete) override final;
     bool PlayOnce(const std::string& filePath) override final;
-protected:
-    void Update(float deltaTime) override;
+    void Update(float deltaTime) override final;
     
 private:
     float GetMaxMem() const { return m_maxMem; };
