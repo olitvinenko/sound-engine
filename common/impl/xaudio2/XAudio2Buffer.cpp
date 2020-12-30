@@ -50,6 +50,9 @@ bool XAudio2Buffer::LoadBuffer()
     m_wfEx.nAvgBytesPerSec = m_wfEx.nBlockAlign * static_cast<DWORD>(samplesPerSecond);
     m_wfEx.cbSize = 0; // size of extra information
 
+    m_duration = decoder->GetDuration();
+    m_sizeMemory = (float)decoder->GetBuffer().size() / (1024.0f * 1024.0f);
+
 	return true;
 }
 

@@ -2,8 +2,6 @@
 
 #include "../Sound.hpp"
 
-#include <memory>
-
 class DummyBuffer;
 
 class DummySound final : public Sound<DummySound>
@@ -33,8 +31,6 @@ private:
     
     bool SetVolume(float volume) override;
     float GetVolume() const override;
-    
-    float GetDurationSec() const override;
     
     bool IsValid() const override;
 };

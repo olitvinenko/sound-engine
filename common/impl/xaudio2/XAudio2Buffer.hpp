@@ -24,7 +24,7 @@ private:
 
 private:
     bool LoadMemory() override { return LoadBuffer(); }
-    bool IsActive() const override { return true; }
+    bool IsActive() const override { return true; } //TODO::
 
 private:
     WAVEFORMATEX m_wfEx;

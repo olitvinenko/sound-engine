@@ -20,6 +20,8 @@ public:
     
     void Delete() final override;
 
+    float GetDurationSec() const override final { return m_duration; };
+
 protected:
     ~Sound();
   

@@ -42,9 +42,7 @@ private: //ISound
     bool SetVolume(float volume) override;
     float GetVolume() const override;
     
-    float GetDurationSec() const override;
-    
-    bool IsValid() const override { return static_cast<bool>(m_source); }
+    bool IsValid() const override { return static_cast<bool>(m_source) && m_x2Buffer; }
 
 private: //IXAudio2VoiceCallback
     void OnVoiceProcessingPassStart(UINT32 BytesRequired) override;
@@ -75,6 +73,7 @@ private:
     };
 
     std::bitset<StateIndices::SIZE> m_state;
+    INT32 m_shiftedSamplesCount { 0 };
 };
 
 #endif

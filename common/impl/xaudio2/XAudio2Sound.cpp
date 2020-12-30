@@ -1,4 +1,3 @@
-
 #ifdef X2AUDIO_SOUND
 
 #include "XAudio2Sound.hpp"
@@ -32,9 +31,8 @@ bool XAudio2Sound::Play()
         return false;
 
     if (!m_state.test(PAUSED))
-    //if (!m_isPaused)
     {
-        SetLoop(m_isLoop);
+        SetLoop(m_state.test(LOOPED));
         SetVolume(m_volume);
 
         m_source->FlushSourceBuffers();
@@ -42,10 +40,8 @@ bool XAudio2Sound::Play()
     }
 
     m_state.reset(PAUSED);
+    m_state.reset(STOPPED);
     m_state.set(PLAYING);
-
-    //m_isPaused = false;
-    //m_isPlaying = true;
 
     return x2WrapCall(m_source->Start());
 }
@@ -57,9 +53,6 @@ bool XAudio2Sound::Pause()
 
     m_state.reset(PLAYING);
     m_state.set(PAUSED);
-    
-    //m_isPaused = true;
-    //m_isPlaying = false;
 
     return x2WrapCall(m_source->Stop());
 }
@@ -74,23 +67,22 @@ bool XAudio2Sound::Stop()
 
     m_state.reset(PLAYING);
     m_state.set(STOPPED);
-    //m_isPlaying = false;
 
-	return x2WrapCall(m_source->Stop());
+    m_shiftedSamplesCount = 0;
+
+    return x2WrapCall(m_source->Stop());
 }
 
 bool XAudio2Sound::SetLoop(bool isLoop)
 {
     isLoop ? m_state.set(LOOPED) : m_state.reset(LOOPED);
 
-    //m_isLoop = isLoop;
 	return true;
 }
 
 bool XAudio2Sound::IsLoopped() const
 {
     return m_state.test(LOOPED);
-	//return m_isLoop;
 }
 
 bool XAudio2Sound::IsPlaying() const
@@ -101,25 +93,61 @@ bool XAudio2Sound::IsPlaying() const
     XAUDIO2_VOICE_STATE state;
     m_source->GetState(&state);
 
-    return state.SamplesPlayed > 0 && state.BuffersQueued > 0 && m_state.test(PLAYING);// m_isPlaying;
+    return state.pCurrentBufferContext && state.SamplesPlayed > 0 && state.BuffersQueued > 0 && m_state.test(PLAYING);// m_isPlaying;
 }
 
 bool XAudio2Sound::IsPaused() const { return m_state.test(PAUSED); }
 bool XAudio2Sound::IsStopped() const { return m_state.test(STOPPED) && !IsPlaying(); }
 
-//TODO::
-bool XAudio2Sound::SetTime(float timeSeconds) { return false; }
+bool XAudio2Sound::SetTime(float timeSeconds)
+{
+    if (IsPlaying())
+        Stop();
 
-//TODO::
-float XAudio2Sound::GetTime() const { return .0f; }
+    XAUDIO2_VOICE_STATE state;
+    m_source->GetState(&state);
 
-//TODO::
-bool XAudio2Sound::SetVolume(float volume) { return false; }
-//TODO::
-float XAudio2Sound::GetVolume() const { return .0f; }
+    const UINT32 samplesShifted = static_cast<UINT32>(timeSeconds * static_cast<float>(m_x2Buffer->GetWaveFormatEx().nSamplesPerSec));
 
-//TODO::
-float XAudio2Sound::GetDurationSec() const { return .0f; }
+    XAUDIO2_BUFFER* buffer = m_x2Buffer->GetX2Buffer();
+
+    buffer->PlayBegin = samplesShifted;
+    Play();
+    buffer->PlayBegin = 0;
+
+    m_shiftedSamplesCount = state.SamplesPlayed - samplesShifted;
+
+	return true;
+}
+
+float XAudio2Sound::GetTime() const
+{
+    if (!IsValid())
+        return .0f;
+
+    XAUDIO2_VOICE_STATE state;
+    m_source->GetState(&state);
+
+    return static_cast<float>(state.SamplesPlayed - m_shiftedSamplesCount) / static_cast<float>(m_x2Buffer->GetWaveFormatEx().nSamplesPerSec);
+}
+
+bool XAudio2Sound::SetVolume(float volume)
+{
+    if (!IsValid())
+        return false;
+
+    m_volume = max(min(volume, 1.0f), 0.0f);
+    return x2WrapCall(m_source->SetVolume(m_volume));
+}
+
+float XAudio2Sound::GetVolume() const
+{
+    if (!IsValid())
+        return .0f;
+
+    m_source->GetVolume(const_cast<float*>(&m_volume));
+    return m_volume;
+}
 
 //----------------------------------------------------------------------
 
@@ -138,22 +166,24 @@ void XAudio2Sound::OnStreamEnd()
 {
     m_state.reset(PLAYING);
 
-   // m_isPlaying = false;
+    m_shiftedSamplesCount = 0;
 
-    if (m_isLoop)
+    if (m_state.test(LOOPED))
         Play();
 }
 
 void XAudio2Sound::OnBufferStart(void* pBufferContext)
 {
     m_state.set(PLAYING);
-    //m_isPlaying = true;
 }
 
 void XAudio2Sound::OnBufferEnd(void* pBufferContext)
 {
-    m_state.reset(PLAYING);
-   // m_isPlaying = false;
+    XAUDIO2_VOICE_STATE state;
+    m_source->GetState(&state);
+
+    if (!state.BuffersQueued)
+        m_state.reset(PLAYING);
 }
 
 // Called in the event of a critical error during voice processing,

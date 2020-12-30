@@ -24,6 +24,4 @@ bool DummySound::IsStopped() const { return false; }
 bool DummySound::SetVolume(float volume) { return false; }
 float DummySound::GetVolume() const { return .0f; }
 
-float DummySound::GetDurationSec() const { return .0f; }
-
 bool DummySound::IsValid() const { return true; }

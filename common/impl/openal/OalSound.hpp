@@ -37,8 +37,6 @@ private:
     
     bool SetVolume(float volume) override;
     float GetVolume() const override { return m_volume; }
-    
-    float GetDurationSec() const override { return m_duration; }
 
 public:
     ALuint GetSourceId() const { return m_sourceID; }
