@@ -457,84 +457,65 @@ int decodeMP3(mp3_callbacks* cb, void* source, std::vector<char>& pcmBuffer, int
     config.crcEnabled = false;
 
     // Allocate the decoder memory.
-    uint32_t memRequirements = pvmp3_decoderMemRequirements();
-    void *decoderBuf = malloc(memRequirements);
-    assert(decoderBuf != NULL);
+    const uint32_t memRequirements = pvmp3_decoderMemRequirements();
+    assert(memRequirements > 0);
+    
+    std::unique_ptr<char[]> decoderBuf(new (std::nothrow) char[memRequirements]);
+    if (!decoderBuf)
+        return EXIT_FAILURE;
 
     // Initialize the decoder.
-    pvmp3_InitDecoder(&config, decoderBuf);
+    pvmp3_InitDecoder(&config, decoderBuf.get());
 
     // Open the input file.
     Mp3Reader mp3Reader;
-    bool success = mp3Reader.init(cb, source);
-    if (!success) {
-        //("mp3Reader.init: Encountered error reading\n");
-        free(decoderBuf);
+    if (!mp3Reader.init(cb, source))
         return EXIT_FAILURE;
-    }
-
-    // Open the output file.
-    // SF_INFO sfInfo;
-    // memset(&sfInfo, 0, sizeof(SF_INFO));
-    // sfInfo.channels = mp3Reader.getNumChannels();
-    // sfInfo.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
-    // sfInfo.samplerate = mp3Reader.getSampleRate();
-    // SNDFILE *handle = sf_open(argv[2], SFM_WRITE, &sfInfo);
-    // if (handle == NULL) {
-    //     ("Encountered error writing %s\n", argv[2]);
-    //     mp3Reader.close();
-    //     free(decoderBuf);
-    //     return EXIT_FAILURE;
-    // }
+    
+    *numChannels = mp3Reader.getNumChannels();
+    *sampleRate = mp3Reader.getSampleRate();
 
     // Allocate input buffer.
-    uint8_t *inputBuf = static_cast<uint8_t*>(malloc(kInputBufferSize));
-    assert(inputBuf != NULL);
+    std::unique_ptr<uint8_t[]> inputBuf(new (std::nothrow) uint8_t[kInputBufferSize]);
+    if (!inputBuf)
+        return EXIT_FAILURE;
 
     // Allocate output buffer.
-    int16_t *outputBuf = static_cast<int16_t*>(malloc(kOutputBufferSize));
-    assert(outputBuf != NULL);
+    std::unique_ptr<uint8_t[]> outputBuf(new (std::nothrow) uint8_t[kOutputBufferSize]);
+    if (!outputBuf)
+        return EXIT_FAILURE;
 
     // Decode loop.
     int retVal = EXIT_SUCCESS;
-    while (1) {
+    while (1)
+    {
         // Read input from the file.
         uint32_t bytesRead;
-        bool success = mp3Reader.getFrame(inputBuf, &bytesRead);
-        if (!success) break;
-
-        *numChannels = mp3Reader.getNumChannels();
-        *sampleRate = mp3Reader.getSampleRate();
+        bool success = mp3Reader.getFrame(inputBuf.get(), &bytesRead);
+        if (!success)
+            break;
 
         // Set the input config.
         config.inputBufferCurrentLength = bytesRead;
         config.inputBufferMaxLength = 0;
         config.inputBufferUsedLength = 0;
-        config.pInputBuffer = inputBuf;
-        config.pOutputBuffer = outputBuf;
+        config.pInputBuffer = inputBuf.get();
+        config.pOutputBuffer = (int16*)outputBuf.get();
         config.outputFrameSize = kOutputBufferSize / sizeof(int16_t);
 
         ERROR_CODE decoderErr;
-        decoderErr = pvmp3_framedecoder(&config, decoderBuf);
-        if (decoderErr != NO_DECODING_ERROR) {
-            //("Decoder encountered error=%d", decoderErr);
+        decoderErr = pvmp3_framedecoder(&config, decoderBuf.get());
+        if (decoderErr != NO_DECODING_ERROR)
+        {
             retVal = EXIT_FAILURE;
             break;
         }
 
-        pcmBuffer.insert(pcmBuffer.end(), (char*)outputBuf, ((char*)outputBuf) + config.outputFrameSize * 2);
+        pcmBuffer.insert(pcmBuffer.end(), (char*)outputBuf.get(), (char*)outputBuf.get() + config.outputFrameSize * 2);
         *numFrames += config.outputFrameSize / mp3Reader.getNumChannels();
     }
 
-    // Close input reader and output writer.
     mp3Reader.close();
-    // sf_close(handle);
-
-    // Free allocated memory.
-    free(inputBuf);
-    free(outputBuf);
-    free(decoderBuf);
-
     return retVal;
 }
 
