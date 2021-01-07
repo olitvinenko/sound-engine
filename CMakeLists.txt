@@ -57,7 +57,9 @@ elseif(UNIX)
 	else()
 		message("can't find OpenAL library")
 	endif()
-	
+
+else()
+	add_definitions(-DDUMMY_SOUND)
 endif()
 
 #executable

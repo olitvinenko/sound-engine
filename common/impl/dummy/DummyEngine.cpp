@@ -1,3 +1,5 @@
+#ifdef DUMMY_SOUND
+
 #include "DummyEngine.hpp"
 #include "DummySound.hpp"
 #include "DummyBuffer.hpp"
@@ -16,3 +18,5 @@ std::shared_ptr<DummyBuffer> DummyEngine::CreateBuffer(const std::string& file)
 {
     return std::make_shared<DummyBuffer>(file, this);
 }
+
+#endif

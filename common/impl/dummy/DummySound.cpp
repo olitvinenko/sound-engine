@@ -1,3 +1,5 @@
+#ifdef DUMMY_SOUND
+
 #include "DummySound.hpp"
 #include "DummyBuffer.hpp"
 
@@ -25,3 +27,5 @@ bool DummySound::SetVolume(float volume) { return false; }
 float DummySound::GetVolume() const { return .0f; }
 
 bool DummySound::IsValid() const { return true; }
+
+#endif

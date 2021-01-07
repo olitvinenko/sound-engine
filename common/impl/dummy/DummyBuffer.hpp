@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef DUMMY_SOUND
+
 #include "../SoundBuffer.hpp"
 #include "DummySound.hpp"
 
@@ -15,3 +17,4 @@ private:
     bool IsActive() const override { return true; }
 };
 
+#endif

@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef DUMMY_SOUND
+
 #include "../Sound.hpp"
 
 class DummyBuffer;
@@ -34,3 +36,5 @@ private:
     
     bool IsValid() const override;
 };
+
+#endif
