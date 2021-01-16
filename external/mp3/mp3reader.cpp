@@ -34,6 +34,7 @@
 
 #include "pvmp3decoder_api.h"
 #include "mp3reader.h"
+#include <memory>
 
 using namespace std;
 
