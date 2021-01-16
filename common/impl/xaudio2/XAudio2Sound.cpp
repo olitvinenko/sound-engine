@@ -149,6 +149,14 @@ float XAudio2Sound::GetVolume() const
     return m_volume;
 }
 
+void XAudio2Sound::SetPitch(float pitch)
+{
+    if (!IsValid())
+        return;
+
+    x2WrapCall(m_source->SetFrequencyRatio(pitch));
+}
+
 //----------------------------------------------------------------------
 
 void XAudio2Sound::OnVoiceProcessingPassStart(UINT32 BytesRequired)

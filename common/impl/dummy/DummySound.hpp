@@ -35,6 +35,8 @@ private:
     float GetVolume() const override;
     
     bool IsValid() const override;
+
+    void SetPitch(float pitch) override;
 };
 
 #endif

@@ -28,4 +28,6 @@ float DummySound::GetVolume() const { return .0f; }
 
 bool DummySound::IsValid() const { return true; }
 
+void DummySound::SetPitch(float pitch) { }
+
 #endif

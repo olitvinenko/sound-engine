@@ -21,6 +21,8 @@ struct ISound
     
     virtual float GetDurationSec() const = 0;
 
+    virtual void SetPitch(float pitch) = 0;
+
 protected:
     virtual ~ISound() = default;
 };

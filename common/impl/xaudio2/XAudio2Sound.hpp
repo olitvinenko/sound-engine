@@ -44,6 +44,8 @@ private: //ISound
     
     bool IsValid() const override { return static_cast<bool>(m_source) && m_x2Buffer; }
 
+    void SetPitch(float pitch) override;
+
 private: //IXAudio2VoiceCallback
     void OnVoiceProcessingPassStart(UINT32 BytesRequired) override;
     void OnVoiceProcessingPassEnd() override;

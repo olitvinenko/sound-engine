@@ -170,4 +170,12 @@ bool OalSound::Volume(float volume)
     return false;
 }
 
+void OalSound::SetPitch(float pitch)
+{
+    if (!IsValid())
+        return;
+
+    alCall(alSourcef, m_sourceID, AL_PITCH, pitch);
+}
+
 #endif
