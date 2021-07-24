@@ -43,8 +43,9 @@ void testFile(const char* filePath)
 
 #include <thread>
 #include <chrono>
+#include <fstream>
 
-const char* TEST_SOUND_NAME = "Retrigger.wav";//"file_example_MP3_2MG.mp3";//"Retrigger.wav";
+static const char* TEST_SOUND_NAME = "./data/default.ogg"; 
 
 SoundHandle MakeHandle(ISoundEngine* engine)
 {
@@ -78,8 +79,9 @@ int main()
 //    testFile("file_example_WAV_2MG.wav");std::cout << std::endl;
 //    testFile("default.ogg");
 //
+
     std::unique_ptr<ISoundEngine> engine = ISoundEngine::Create();
-    
+
 //    SoundHandle handle = engine->GetSound("Retrigger.mp3", false);
 //    handle->SetLoop(true);
 //    handle->Play();
@@ -93,10 +95,7 @@ int main()
 //        handle2->Stop();
 //    }
     
-    
-    
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    
     
     {
         SoundHandle h1 = engine->GetSound(TEST_SOUND_NAME, false);
@@ -180,82 +179,4 @@ int main()
         
         engine.reset();
     }
-    
-    
-//    ALuint buffer, source;
-//    ALint state;
-//    ALsizei size;
-//    ALsizei frequency;
-//    ALenum format;
-//
-//    auto decoder = AudioDecoder::GetDecoderFor("free_game_music_advanced.mp3");
-//    if (!decoder)
-//    {
-//        std::cerr << "Unsupported audio file extension " << std::endl;
-//        return -1;
-//    }
-//
-//    if (!decoder->decode())
-//    {
-//        std::cerr << "Can not decode audio file " << std::endl;
-//        return -1;
-//    }
-//
-//    size = decoder->GetBuffer().size();
-//    frequency = decoder->GetSampleRate();
-//
-//    if (decoder->GetChannels() == 1)
-//    {
-//        if (decoder->GetBitsPerSample() == 8)
-//            format = AL_FORMAT_MONO8;
-//        else if (decoder->GetBitsPerSample() == 16)
-//            format = AL_FORMAT_MONO16;
-//    }
-//    else if (decoder->GetChannels() == 2)
-//    {
-//        if (decoder->GetBitsPerSample() == 8)
-//            format = AL_FORMAT_STEREO8;
-//        else if (decoder->GetBitsPerSample() == 16)
-//            format = AL_FORMAT_STEREO16;
-//    }
-//
-//    format = AL_FORMAT_MONO16;
-//
-//    ALCcontext *context;
-//    ALCdevice *device;
-//
-//    device = alcOpenDevice(nullptr);
-//    if (device == NULL)
-//    {
-//        std::cerr << "Error finding default Audio Output Device" << std::endl;
-//    }
-//
-//    context = alcCreateContext(device,NULL);
-//
-//    alcMakeContextCurrent(context);
-//
-//    alGenBuffers(1, &buffer);
-//    if(alGetError() != AL_NO_ERROR) {
-//        std::cerr << alGetError() << std::endl;
-//    }
-//    alBufferData(buffer, format, (void*)decoder->GetBuffer().data(),
-//                         size, frequency);
-//    if(alGetError() != AL_NO_ERROR) {
-//        std::cerr << alGetError() << std::endl;
-//    }
-//
-//    alGenSources(1, &source);
-//    alSourcei(source, AL_BUFFER, buffer);
-//
-//    // Play
-//    alSourcePlay(source);
-//
-//    // Wait for the song to complete
-//    do {
-//        alGetSourcei(source, AL_SOURCE_STATE, &state);
-//    } while (state == AL_PLAYING);
-//
-//    // Clean up sources and buffers
-//    alDeleteSources(1, &source);
-//    alDeleteBuffers(1, &buffer);
 }

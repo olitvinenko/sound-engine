@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef DUMMY_SOUND
+#ifdef SOUND_DUMMY
 
 #include "../SoundBuffer.hpp"
 #include "DummySound.hpp"

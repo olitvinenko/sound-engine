@@ -2,7 +2,7 @@
 #include "XAudio2Sound.hpp"
 #include <iostream>
 #include "XAudio2Utils.hpp"
-#ifdef X2AUDIO_SOUND
+#ifdef SOUND_X2AUDIO
 
 #include "XAudio2Buffer.hpp"
 

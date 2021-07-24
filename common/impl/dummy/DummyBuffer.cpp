@@ -1,6 +1,6 @@
 #include "DummyBuffer.hpp"
 
-#ifdef DUMMY_SOUND
+#ifdef SOUND_DUMMY
 
 DummyBuffer::DummyBuffer(const std::string& fileName, InternalEngine* engine)
 : SoundBuffer(fileName, engine)

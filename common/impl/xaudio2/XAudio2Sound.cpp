@@ -1,4 +1,4 @@
-#ifdef X2AUDIO_SOUND
+#ifdef SOUND_X2AUDIO
 
 #include "XAudio2Sound.hpp"
 #include "XAudio2Buffer.hpp"

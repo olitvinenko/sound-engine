@@ -1,4 +1,4 @@
-#ifdef OPENAL_SOUND
+#ifdef SOUND_OPENAL
 
 #include "OalSound.hpp"
 #include "OalBuffer.hpp"

@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef X2AUDIO_SOUND
+#ifdef SOUND_X2AUDIO
 
 #define OPSETID 1U
 

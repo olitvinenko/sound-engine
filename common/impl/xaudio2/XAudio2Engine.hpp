@@ -1,7 +1,7 @@
 #pragma once
 #include "XAudio2Sound.hpp"
 
-#ifdef X2AUDIO_SOUND
+#ifdef SOUND_X2AUDIO
 
 #include "../SoundEngine.hpp"
 

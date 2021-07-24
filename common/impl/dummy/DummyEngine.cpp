@@ -1,4 +1,4 @@
-#ifdef DUMMY_SOUND
+#ifdef SOUND_DUMMY
 
 #include "DummyEngine.hpp"
 #include "DummySound.hpp"
