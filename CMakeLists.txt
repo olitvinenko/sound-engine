@@ -40,7 +40,6 @@ endforeach()
 add_library(sound_engine ${SRC_ALL})
 
 if(WIN32)
-	#message ("audio lib is not implemented")
 	add_definitions(-DX2AUDIO_SOUND)
 elseif(UNIX)
 
@@ -73,3 +72,11 @@ file(GLOB_RECURSE SRC_EXECUTABLE
 add_executable(tests ${SRC_EXECUTABLE})
 
 target_link_libraries(tests sound_engine)
+
+#copy to the main project folder
+set(source_dir data)
+set(destination_dir ${CMAKE_BINARY_DIR})
+
+file( COPY ${source_dir}
+      DESTINATION ${destination_dir}
+)
