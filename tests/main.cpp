@@ -2,7 +2,7 @@
 #include <iostream>
 #include "common/decoders/AudioDecoder.hpp"
 
-#ifdef OPENAL_SOUND
+#ifdef SOUND_OPENAL
 
 #include <OpenAL/OpenAL.h>
 
